@@ -15,7 +15,6 @@ const mockProducts = [
     description: "Rich and aromatic premium Ceylon coffee with notes of chocolate and citrus",
     price: 24.99,
     originalPrice: 29.99,
-    image: "/lovable-uploads/6f585580-b495-45ec-9ac2-b6521c1b4b70.png",
     rating: 4.8,
     reviewCount: 124,
     category: "Coffee",
@@ -27,7 +26,6 @@ const mockProducts = [
     name: "Royal Chocolate Cake",
     description: "Decadent chocolate cake with Ceylon cinnamon and premium cocoa",
     price: 18.50,
-    image: "/lovable-uploads/6f585580-b495-45ec-9ac2-b6521c1b4b70.png",
     rating: 4.9,
     reviewCount: 89,
     category: "Cakes",
@@ -39,12 +37,10 @@ const mockProducts = [
     description: "Perfect morning blend with strong flavor and smooth finish",
     price: 19.99,
     originalPrice: 24.99,
-    image: "/lovable-uploads/6f585580-b495-45ec-9ac2-b6521c1b4b70.png",
     rating: 4.6,
     reviewCount: 67,
     category: "Coffee",
   },
-  // Add more mock products as needed
 ];
 
 const categories = ["All", "Coffee", "Cakes", "Pastries", "Accessories"];
@@ -173,8 +169,6 @@ export default function Products() {
         <div className="mt-12 p-6 bg-gradient-cream rounded-lg border border-accent/20">
           <h3 className="font-semibold mb-2 text-primary">Ready for Real Product Data?</h3>
           <p className="text-muted-foreground text-sm">
-            Connect your project to Supabase to enable real product management, 
-            inventory tracking, and shopping cart functionality.
           </p>
         </div>
       </main>

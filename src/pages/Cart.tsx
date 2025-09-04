@@ -14,7 +14,6 @@ const mockCartItems = [
     name: "Ceylon Gold Premium Coffee",
     price: 24.99,
     quantity: 2,
-    image: "/lovable-uploads/6f585580-b495-45ec-9ac2-b6521c1b4b70.png",
     category: "Coffee"
   },
   {
@@ -22,7 +21,6 @@ const mockCartItems = [
     name: "Royal Chocolate Cake",
     price: 18.50,
     quantity: 1,
-    image: "/lovable-uploads/6f585580-b495-45ec-9ac2-b6521c1b4b70.png",
     category: "Cakes"
   }
 ];
@@ -165,14 +163,8 @@ export default function Cart() {
             </Card>
           </div>
         </div>
-
-        {/* Supabase Integration Notice */}
         <div className="mt-12 p-6 bg-card rounded-lg border border-accent/20 shadow-warm">
           <h3 className="font-semibold mb-2 text-primary">Shopping Cart Ready</h3>
-          <p className="text-muted-foreground text-sm">
-            Connect to Supabase to enable persistent cart storage, user sessions, 
-            and checkout functionality with payment processing.
-          </p>
         </div>
       </main>
     </div>

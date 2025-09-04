@@ -1,4 +1,4 @@
-// File: /Users/ahazfernando/Downloads/sweet-dash-emporium-main-2/app/layout.tsx
+// File: /Users/ahazfernando/Downloads/TrueTaste/app/layout.tsx
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

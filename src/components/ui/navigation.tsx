@@ -19,7 +19,6 @@ export function Navigation({ cartItemCount = 0 }: NavigationProps) {
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <Crown className="h-8 w-8 text-accent" />
           <Link href="/" className="font-bold text-xl bg-gradient-coffee bg-clip-text text-transparent">
             CeylonTaste
           </Link>
