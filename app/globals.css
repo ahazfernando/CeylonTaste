@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CeylonTaste Design System - Inspired by warm coffee shop atmosphere */
+
+@layer base {
+  :root {
+    /* Brand Colors from CeylonTaste Brand Guide */
+    --background: 44 28% 95%;
+    --foreground: 15 45% 15%;
+
+    /* Coffee & Cream tones */
+    --card: 44 28% 98%;
+    --card-foreground: 15 45% 15%;
+
+    --popover: 44 28% 98%;
+    --popover-foreground: 15 45% 15%;
+
+    /* Primary: Rich Coffee Brown (Midnight Green from brand) */
+    --primary: 15 45% 23%;
+    --primary-foreground: 44 28% 98%;
+
+    /* Secondary: Warm Coffee Cream */
+    --secondary: 32 45% 75%;
+    --secondary-foreground: 15 45% 15%;
+
+    /* Muted: Light Coffee */
+    --muted: 44 20% 88%;
+    --muted-foreground: 15 25% 45%;
+
+    /* Accent: Ceylon Emerald (from brand guide) */
+    --accent: 32 45% 65%;
+    --accent-foreground: 15 45% 15%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 44 28% 98%;
+
+    --border: 44 20% 85%;
+    --input: 44 20% 90%;
+    --ring: 32 45% 65%;
+
+    /* Brand Gradients */
+    --gradient-coffee: linear-gradient(135deg, hsl(15 45% 23%), hsl(32 45% 65%));
+    --gradient-cream: linear-gradient(180deg, hsl(44 28% 98%), hsl(44 20% 92%));
+    --gradient-royal: linear-gradient(135deg, hsl(32 45% 65%), hsl(44 45% 75%));
+
+    /* Shadows with brand colors */
+    --shadow-coffee: 0 10px 30px -10px hsl(15 45% 23% / 0.3);
+    --shadow-warm: 0 4px 20px -4px hsl(32 45% 65% / 0.2);
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
