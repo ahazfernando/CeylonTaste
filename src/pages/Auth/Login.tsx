@@ -1,4 +1,3 @@
-import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,8 +12,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-gradient-cream">
-      <Navigation />
-      <main className="container flex items-center justify-center min-h-[calc(100vh-4rem)] py-8">
+      <main className="container flex items-center justify-center min-h-screen py-8">
         <Card className="w-full max-w-md shadow-coffee">
           <CardHeader className="text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
@@ -100,9 +98,9 @@ export default function Login() {
 
         {/* Supabase Integration Notice */}
         <div className="fixed bottom-4 right-4 max-w-sm p-4 bg-card border border-accent/20 rounded-lg shadow-warm">
-          <h4 className="font-semibold mb-1 text-sm">Authentication Ready</h4>
+          <h4 className="font-semibold mb-1 text-sm">Get 10% Off</h4>
           <p className="text-xs text-muted-foreground">
-            Connect to Supabase to enable login functionality and user management.
+            Get 5% Off purchase made over LKR 1000 and 10% off on purchases made over LKR 1500 with Ceylon Taste. 
           </p>
         </div>
       </main>

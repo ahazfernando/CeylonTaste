@@ -9,7 +9,6 @@ export default function About() {
     <div className="min-h-screen">
       <Navigation />
       <main>
-        {/* Hero Section */}
         <section className="py-16 bg-gradient-cream">
           <div className="container">
             <div className="max-w-3xl mx-auto text-center">
