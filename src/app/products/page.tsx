@@ -17,23 +17,23 @@ const mockProducts = [
     description: "Rich and aromatic premium Ceylon coffee with notes of chocolate and citrus",
     price: 24.99,
     originalPrice: 29.99,
-    image: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=400&fit=crop",
     rating: 4.8,
     reviewCount: 124,
     category: "Coffee",
     isNew: true,
     isFeatured: true,
+    image: "/placeholder.svg",
   },
   {
     id: "2",
     name: "Royal Chocolate Cake",
     description: "Decadent chocolate cake with Ceylon cinnamon and premium cocoa",
     price: 18.50,
-    image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&h=400&fit=crop",
     rating: 4.9,
     reviewCount: 89,
     category: "Cakes",
     isFeatured: true,
+    image: "/placeholder.svg",
   },
   {
     id: "3",
@@ -41,12 +41,11 @@ const mockProducts = [
     description: "Perfect morning blend with strong flavor and smooth finish",
     price: 19.99,
     originalPrice: 24.99,
-    image: "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=400&h=400&fit=crop",
     rating: 4.6,
     reviewCount: 67,
     category: "Coffee",
+    image: "/placeholder.svg",
   },
-  // Add more mock products as needed
 ];
 
 const categories = ["All", "Coffee", "Cakes", "Pastries", "Accessories"];
@@ -59,7 +58,7 @@ export default function Products() {
 
   const filteredProducts = mockProducts.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          product.description.toLowerCase().includes(searchTerm.toLowerCase());
+                         product.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -74,7 +73,7 @@ export default function Products() {
             Our Products
           </h1>
           <p className="text-muted-foreground max-w-2xl">
-            Discover our premium collection of Ceylon coffee and handcrafted cakes.
+            Discover our premium collection of Ceylon coffee and handcrafted cakes. 
             Each product is made with the finest ingredients and traditional methods.
           </p>
         </div>
@@ -143,7 +142,7 @@ export default function Products() {
 
         {/* Products Grid */}
         <div className={
-          viewMode === "grid"
+          viewMode === "grid" 
             ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
             : "space-y-4"
         }>
@@ -175,8 +174,6 @@ export default function Products() {
         <div className="mt-12 p-6 bg-gradient-cream rounded-lg border border-accent/20">
           <h3 className="font-semibold mb-2 text-primary">Ready for Real Product Data?</h3>
           <p className="text-muted-foreground text-sm">
-            Connect your project to Supabase to enable real product management,
-            inventory tracking, and shopping cart functionality.
           </p>
         </div>
       </main>

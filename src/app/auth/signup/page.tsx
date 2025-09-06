@@ -1,3 +1,5 @@
+"use client";
+
 import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from "@/components/ui/separator";
 import { Crown, Coffee, Eye, EyeOff, User } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
@@ -108,11 +110,11 @@ export default function SignUp() {
                 <input type="checkbox" className="rounded border-border mt-1" />
                 <span className="text-muted-foreground">
                   I agree to the{" "}
-                  <Link to="/terms" className="text-accent hover:text-accent/80">
+                  <Link href="/terms" className="text-accent hover:text-accent/80">
                     Terms of Service
                   </Link>{" "}
                   and{" "}
-                  <Link to="/privacy" className="text-accent hover:text-accent/80">
+                  <Link href="/privacy" className="text-accent hover:text-accent/80">
                     Privacy Policy
                   </Link>
                 </span>
@@ -129,8 +131,8 @@ export default function SignUp() {
 
             <p className="text-center text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link 
-                to="/login" 
+              <Link
+                href="/auth/login"
                 className="text-accent hover:text-accent/80 font-medium"
               >
                 Sign in

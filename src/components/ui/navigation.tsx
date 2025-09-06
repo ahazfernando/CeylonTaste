@@ -18,7 +18,7 @@ export function Navigation({ cartItemCount = 0 }: NavigationProps) {
 
   return (
     <div className="sticky top-0 z-50 pt-3 px-4">
-      <nav className="w-full border-b border-amber-200/30 rounded-lg" style={{ backgroundColor: '#EFE2D1' }}>
+      <nav className="w-90% rounded-2xl bg-white">
         <div className="mx-4 flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3 flex-shrink-0">

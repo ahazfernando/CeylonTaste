@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -5,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from "@/components/ui/separator";
 import { Crown, Coffee, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -68,8 +70,8 @@ export default function Login() {
                 <input type="checkbox" className="rounded border-border" />
                 Remember me
               </label>
-              <Link 
-                to="/forgot-password" 
+              <Link
+                href="/forgot-password"
                 className="text-accent hover:text-accent/80 font-medium"
               >
                 Forgot password?
@@ -86,8 +88,8 @@ export default function Login() {
 
             <p className="text-center text-sm text-muted-foreground">
               Don't have an account?{" "}
-              <Link 
-                to="/signup" 
+              <Link
+                href="/auth/signup"
                 className="text-accent hover:text-accent/80 font-medium"
               >
                 Sign up
