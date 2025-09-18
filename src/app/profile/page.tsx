@@ -207,15 +207,6 @@ export default function Profile() {
             </Card>
           </TabsContent>
         </Tabs>
-
-        {/* Supabase Integration Notice */}
-        <div className="mt-12 p-6 bg-card rounded-lg border border-accent/20 shadow-warm">
-          <h3 className="font-semibold mb-2 text-primary">Profile Features Ready</h3>
-          <p className="text-muted-foreground text-sm">
-            Connect to Supabase to enable full profile management, order history tracking, 
-            favorite items, and personalized user experiences.
-          </p>
-        </div>
       </main>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Navigation } from "@/components/ui/navigation";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,6 +49,15 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [authorized, setAuthorized] = useState(false);
 
+  async function handleLogout() {
+    try {
+      await fetch("http://localhost:4000/api/auth/logout", { method: "POST", credentials: "include" });
+    } finally {
+      try { localStorage.removeItem('tt_token'); } catch {}
+      router.replace("/");
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
     const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
@@ -88,7 +97,6 @@ export default function AdminDashboard() {
   if (!authorized) {
     return (
       <div className="min-h-screen bg-gradient-cream">
-        <Navigation />
         <main className="container py-8">
           <p className="text-muted-foreground">Checking access…</p>
         </main>
@@ -98,8 +106,16 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-cream">
-      <Navigation />
-      <main className="container py-8">
+      <div className="flex">
+        <AdminSidebar />
+        <div className="flex-1">
+          {/* Minimal admin header with only Logout */}
+          <div className="w-full bg-white/70 backdrop-blur border-b">
+            <div className="container flex items-center justify-end py-3">
+              <Button className="bg-amber-800 text-white hover:bg-amber-700" onClick={handleLogout}>Logout</Button>
+            </div>
+          </div>
+          <main className="container py-8">
         {/* Admin Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -302,15 +318,9 @@ export default function AdminDashboard() {
           </TabsContent>
         </Tabs>
 
-        {/* Supabase Integration Notice */}
-        <div className="mt-12 p-6 bg-card rounded-lg border border-accent/20 shadow-warm">
-          <h3 className="font-semibold mb-2 text-primary">Admin Dashboard Ready</h3>
-          <p className="text-muted-foreground text-sm">
-            Connect to Supabase to enable full admin functionality including order management, 
-            product CRUD operations, customer analytics, and real-time business insights.
-          </p>
+          </main>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
