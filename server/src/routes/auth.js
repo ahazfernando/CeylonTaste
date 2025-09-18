@@ -65,7 +65,9 @@ router.post("/logout", async (_req, res) => {
 });
 
 router.get("/me", requireAuth, async (req, res) => {
-	res.json({ user: { id: req.user.id, email: req.user.email, name: req.user.name, role: req.user.role } });
+	const user = await User.findById(req.user.id).lean();
+	if (!user) return res.status(401).json({ error: "Unauthorized" });
+	res.json({ user: { id: user._id.toString(), email: user.email, name: user.name, role: user.role } });
 });
 
 export default router;

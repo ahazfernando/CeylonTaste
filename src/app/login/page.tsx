@@ -42,8 +42,8 @@ export default function Login() {
         try { localStorage.setItem('tt_token', data.token); } catch {}
       }
       const role = data?.user?.role;
-      if (role === "admin") router.push("/admin/dashboard");
-      else router.push("/");
+      // Admin users are redirected to Home Page after login
+      router.push("/");
     } catch (e: any) {
       setError(e?.message || "Something went wrong");
     } finally {

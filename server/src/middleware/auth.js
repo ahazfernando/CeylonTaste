@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
 export function signAuthToken(payload, options = {}) {
 	const secret = process.env.JWT_SECRET || "dev_secret_change_me";
@@ -22,11 +23,15 @@ export function requireAuth(req, res, next) {
 	}
 }
 
-export function requireAdmin(req, res, next) {
-	if (!req.user || req.user.role !== "admin") {
+export async function requireAdmin(req, res, next) {
+	try {
+		if (!req.user?.id) return res.status(403).json({ error: "Forbidden" });
+		const user = await User.findById(req.user.id).lean();
+		if (!user || user.role !== "admin") return res.status(403).json({ error: "Forbidden" });
+		next();
+	} catch {
 		return res.status(403).json({ error: "Forbidden" });
 	}
-	next();
 }
 
 

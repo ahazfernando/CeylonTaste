@@ -53,14 +53,33 @@ export default function AdminDashboard() {
     let cancelled = false;
     const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
     const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
+    console.log("Dashboard: Token from localStorage:", token);
+    console.log("Dashboard: Headers:", headers);
+
     fetch("http://localhost:4000/api/auth/me", { credentials: "include", headers })
-      .then(async (r) => (r.ok ? r.json() : Promise.reject()))
-      .then((data) => {
-        const role = data?.user?.role;
-        if (!cancelled && role === "admin") setAuthorized(true);
-        else router.replace("/");
+      .then(async (r) => {
+        console.log("Dashboard: Fetch response status:", r.status);
+        if (r.ok) {
+          const data = await r.json();
+          console.log("Dashboard: User data:", data);
+          const role = data?.user?.role;
+          console.log("Dashboard: User role:", role);
+          if (!cancelled && role === "admin") {
+            console.log("Dashboard: Setting authorized to true");
+            setAuthorized(true);
+          } else {
+            console.log("Dashboard: Role not admin or cancelled, redirecting to /");
+            if (!cancelled) router.replace("/");
+          }
+        } else {
+          const errorText = await r.text();
+          console.log("Dashboard: Fetch failed with response:", errorText);
+          throw new Error(`HTTP ${r.status}`);
+        }
       })
-      .catch(() => {
+      .catch((error) => {
+        console.log("Dashboard: Fetch error:", error);
         if (!cancelled) router.replace("/");
       });
     return () => { cancelled = true; };
