@@ -54,6 +54,9 @@ export default function SignUp() {
         throw new Error(data?.error || "Signup failed");
       }
       const data = await res.json();
+      if (data?.token) {
+        try { localStorage.setItem('tt_token', data.token); } catch {}
+      }
       const role = data?.user?.role;
       if (role === "admin") router.push("/admin/dashboard");
       else router.push("/");

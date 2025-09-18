@@ -19,7 +19,9 @@ export function Navigation({ cartItemCount = 0 }: NavigationProps) {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("http://localhost:4000/api/auth/me", { credentials: "include" })
+    const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+    fetch("http://localhost:4000/api/auth/me", { credentials: "include", headers })
       .then(async (r) => (r.ok ? r.json() : Promise.reject()))
       .then((data) => {
         if (!cancelled) setCurrentUser(data?.user || null);
@@ -36,6 +38,7 @@ export function Navigation({ cartItemCount = 0 }: NavigationProps) {
     try {
       await fetch("http://localhost:4000/api/auth/logout", { method: "POST", credentials: "include" });
     } finally {
+      try { localStorage.removeItem('tt_token'); } catch {}
       setCurrentUser(null);
       setIsMenuOpen(false);
     }

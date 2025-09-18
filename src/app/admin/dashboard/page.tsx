@@ -51,7 +51,9 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("http://localhost:4000/api/auth/me", { credentials: "include" })
+    const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+    fetch("http://localhost:4000/api/auth/me", { credentials: "include", headers })
       .then(async (r) => (r.ok ? r.json() : Promise.reject()))
       .then((data) => {
         const role = data?.user?.role;
