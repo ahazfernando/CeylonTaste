@@ -1,18 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  BarChart, 
-  Users, 
-  ShoppingCart, 
-  Package, 
-  TrendingUp, 
+import {
+  BarChart,
+  Users,
+  ShoppingCart,
+  Package,
+  TrendingUp,
   DollarSign,
   Crown,
   Coffee,
@@ -46,76 +43,8 @@ const mockProducts = [
 ];
 
 export default function AdminDashboard() {
-  const router = useRouter();
-  const [authorized, setAuthorized] = useState(false);
-
-  async function handleLogout() {
-    try {
-      await fetch("http://localhost:4000/api/auth/logout", { method: "POST", credentials: "include" });
-    } finally {
-      try { localStorage.removeItem('tt_token'); } catch {}
-      router.replace("/");
-    }
-  }
-
-  useEffect(() => {
-    let cancelled = false;
-    const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
-    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-
-    console.log("Dashboard: Token from localStorage:", token);
-    console.log("Dashboard: Headers:", headers);
-
-    fetch("http://localhost:4000/api/auth/me", { credentials: "include", headers })
-      .then(async (r) => {
-        console.log("Dashboard: Fetch response status:", r.status);
-        if (r.ok) {
-          const data = await r.json();
-          console.log("Dashboard: User data:", data);
-          const role = data?.user?.role;
-          console.log("Dashboard: User role:", role);
-          if (!cancelled && role === "admin") {
-            console.log("Dashboard: Setting authorized to true");
-            setAuthorized(true);
-          } else {
-            console.log("Dashboard: Role not admin or cancelled, redirecting to /");
-            if (!cancelled) router.replace("/");
-          }
-        } else {
-          const errorText = await r.text();
-          console.log("Dashboard: Fetch failed with response:", errorText);
-          throw new Error(`HTTP ${r.status}`);
-        }
-      })
-      .catch((error) => {
-        console.log("Dashboard: Fetch error:", error);
-        if (!cancelled) router.replace("/");
-      });
-    return () => { cancelled = true; };
-  }, [router]);
-
-  if (!authorized) {
-    return (
-      <div className="min-h-screen bg-gradient-cream">
-        <main className="container py-8">
-          <p className="text-muted-foreground">Checking access…</p>
-        </main>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-cream">
-      <div className="flex">
-        <AdminSidebar />
-        <div className="flex-1">
-          {/* Minimal admin header with only Logout */}
-          <div className="w-full bg-white/70 backdrop-blur border-b">
-            <div className="container flex items-center justify-end py-3">
-              <Button className="bg-amber-800 text-white hover:bg-amber-700" onClick={handleLogout}>Logout</Button>
-            </div>
-          </div>
-          <main className="container py-8">
+    <main className="container py-8">
         {/* Admin Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -317,10 +246,6 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
         </Tabs>
-
-          </main>
-        </div>
-      </div>
-    </div>
-  );
-}
+      </main>
+    );
+  }

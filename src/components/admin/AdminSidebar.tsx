@@ -29,7 +29,7 @@ export function AdminSidebar() {
   const isActive = (path: string) => pathname === path;
 
   return (
-    <aside className="hidden md:flex md:w-64 flex-col border-r bg-card">
+    <aside className="w-64 flex-col border-r bg-card hidden md:flex">
       <div className="p-4 border-b">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-primary shadow-warm">

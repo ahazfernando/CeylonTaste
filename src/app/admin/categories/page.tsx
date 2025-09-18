@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Search, Edit, Trash2, Tags, Coffee, Cake, Sandwich, Cookie } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const mockCategories = [
   { id: 1, name: "Pastries", description: "Fresh baked pastries including croissants, danish, and more", productCount: 15, icon: Cookie },
@@ -19,31 +17,6 @@ const mockCategories = [
 ];
 
 export default function AdminCategoriesPage() {
-  const router = useRouter();
-  const [authorized, setAuthorized] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
-    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-    fetch("http://localhost:4000/api/auth/me", { credentials: "include", headers })
-      .then(async (r) => (r.ok ? r.json() : Promise.reject()))
-      .then((data) => {
-        const role = data?.user?.role;
-        if (!cancelled && role === "admin") setAuthorized(true);
-        else router.replace("/");
-      })
-      .catch(() => { if (!cancelled) router.replace("/"); });
-    return () => { cancelled = true; };
-  }, [router]);
-
-  async function handleLogout() {
-    try { await fetch("http://localhost:4000/api/auth/logout", { method: "POST", credentials: "include" }); } finally {
-      try { localStorage.removeItem('tt_token'); } catch {}
-      router.replace("/");
-    }
-  }
-
   const [categories] = useState(mockCategories);
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -53,27 +26,8 @@ export default function AdminCategoriesPage() {
     category.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (!authorized) {
-    return (
-      <div className="min-h-screen bg-gradient-cream">
-        <div className="w-full bg-white/70 backdrop-blur border-b"><div className="container py-3" /></div>
-        <main className="container py-8"><p className="text-muted-foreground">Checking access…</p></main>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-cream">
-      <div className="flex">
-        <AdminSidebar />
-        <div className="flex-1">
-          <div className="w-full bg-white/70 backdrop-blur border-b">
-            <div className="container flex items-center justify-end py-3">
-              <Button className="bg-amber-800 text-white hover:bg-amber-700" onClick={handleLogout}>Logout</Button>
-            </div>
-          </div>
-
-          <main className="container p-6 space-y-6">
+    <main className="container p-6 space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">Categories</h1>
@@ -158,10 +112,7 @@ export default function AdminCategoriesPage() {
                 <p className="text-muted-foreground">Try adjusting your search terms.</p>
               </div>
             )}
-          </main>
-        </div>
-      </div>
-    </div>
+    </main>
   );
 }
 

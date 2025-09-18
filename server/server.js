@@ -14,8 +14,7 @@ const port = process.env.PORT || 4000;
 const mongoUri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/truetaste";
 
 const ALLOWED_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:3000";
-app.use(cors({ origin: ALLOWED_ORIGIN, credentials: true, allowedHeaders: ["Content-Type", "Authorization"], methods: ["GET","POST","PATCH","PUT","DELETE","OPTIONS"] }));
-app.options("*", cors({ origin: ALLOWED_ORIGIN, credentials: true, allowedHeaders: ["Content-Type", "Authorization"], methods: ["GET","POST","PATCH","PUT","DELETE","OPTIONS"] }));
+app.use(cors({ origin: ALLOWED_ORIGIN, credentials: true, allowedHeaders: ["Content-Type", "Authorization"] }));
 app.use(express.json());
 app.use(cookieParser());
 

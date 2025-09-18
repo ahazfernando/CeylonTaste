@@ -1,14 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, Eye, Mail, Phone, Users } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const mockCustomers = [
   { id: 1, name: "Sarah Johnson", email: "sarah.johnson@email.com", phone: "+1 (555) 123-4567", totalOrders: 24, totalSpent: 340.50, lastOrder: "2024-01-15", status: "active" },
@@ -32,28 +30,6 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function AdminCustomersPage() {
-  const router = useRouter();
-  const [authorized, setAuthorized] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
-    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-    fetch("http://localhost:4000/api/auth/me", { credentials: "include", headers })
-      .then(async (r) => (r.ok ? r.json() : Promise.reject()))
-      .then((data) => {
-        const role = data?.user?.role;
-        if (!cancelled && role === "admin") setAuthorized(true);
-        else router.replace("/");
-      })
-      .catch(() => { if (!cancelled) router.replace("/"); });
-    return () => { cancelled = true; };
-  }, [router]);
-
-  async function handleLogout() {
-    try { await fetch("http://localhost:4000/api/auth/logout", { method: "POST", credentials: "include" }); } finally { try { localStorage.removeItem('tt_token'); } catch {} router.replace("/"); }
-  }
-
   const [customers] = useState(mockCustomers);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -62,17 +38,8 @@ export default function AdminCustomersPage() {
     customer.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (!authorized) {
-    return (<div className="min-h-screen bg-gradient-cream"><div className="w-full bg-white/70 backdrop-blur border-b"><div className="container py-3"/></div><main className="container py-8"><p className="text-muted-foreground">Checking access…</p></main></div>);
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-cream">
-      <div className="flex">
-        <AdminSidebar />
-        <div className="flex-1">
-          <div className="w-full bg-white/70 backdrop-blur border-b"><div className="container flex items-center justify-end py-3"><Button className="bg-amber-800 text-white hover:bg-amber-700" onClick={handleLogout}>Logout</Button></div></div>
-          <main className="container p-6 space-y-6">
+    <main className="container p-6 space-y-6">
             <div className="flex flex-col gap-2"><h1 className="text-3xl font-bold text-foreground">Customers</h1><p className="text-muted-foreground">Manage your customer relationships</p></div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -106,10 +73,7 @@ export default function AdminCustomersPage() {
                 {filteredCustomers.length === 0 && (<div className="text-center py-12"><Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" /><h3 className="text-lg font-medium text-foreground mb-2">No customers found</h3><p className="text-muted-foreground">Try adjusting your search criteria.</p></div>)}
               </CardContent>
             </Card>
-          </main>
-        </div>
-      </div>
-    </div>
+    </main>
   );
 }
 
