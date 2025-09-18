@@ -1,3 +1,5 @@
+"use client";
+
 import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Plus, Minus, Trash2, ShoppingBag, ArrowLeft, Tag } from "lucide-react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 // Mock cart data - replace with Supabase data
 const mockCartItems = [
@@ -14,14 +16,16 @@ const mockCartItems = [
     name: "Ceylon Gold Premium Coffee",
     price: 24.99,
     quantity: 2,
-    category: "Coffee"
+    category: "Coffee",
+    image: "/placeholder.svg"
   },
   {
-    id: "2", 
+    id: "2",
     name: "Royal Chocolate Cake",
     price: 18.50,
     quantity: 1,
-    category: "Cakes"
+    category: "Cakes",
+    image: "/placeholder.svg"
   }
 ];
 
@@ -37,7 +41,7 @@ export default function Cart() {
       <main className="container py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <Link to="/products">
+          <Link href="/products">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -155,7 +159,7 @@ export default function Cart() {
                   Proceed to Checkout
                 </Button>
                 <Button variant="outline" asChild className="w-full">
-                  <Link to="/products">
+                  <Link href="/products">
                     Continue Shopping
                   </Link>
                 </Button>

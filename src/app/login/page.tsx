@@ -8,14 +8,45 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import primaryLogo from "@/assets/Home/CeylonTaste-Primary-2.png";
 import loginCouple from "@/assets/Login/login-couple.jpg";
 import loginFamily from "@/assets/Login/login-family.jpg";
 
 export default function Login() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleLogin() {
+    try {
+      setError(null);
+      setLoading(true);
+      const res = await fetch("http://localhost:4000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || "Login failed");
+      }
+      const data = await res.json();
+      const role = data?.user?.role;
+      if (role === "admin") router.push("/admin/dashboard");
+      else router.push("/");
+    } catch (e: any) {
+      setError(e?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const carouselImages = [
     {
@@ -156,6 +187,8 @@ export default function Login() {
                     type="email" 
                     placeholder="Enter your email"
                     className="px-4 py-3 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
 
@@ -167,6 +200,8 @@ export default function Login() {
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
                       className="px-4 py-3 pr-12 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                     />
                     <Button
                       type="button"
@@ -202,8 +237,9 @@ export default function Login() {
               </CardContent>
 
               <CardFooter className="flex flex-col space-y-4">
-                <Button className="w-full py-3 bg-[#B37142] text-white font-medium rounded-xl hover:from-orange-600 hover:to-orange-700 focus:ring-1 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 shadow-lg">
-                  Sign In
+                {error ? (<p className="text-sm text-red-600">{error}</p>) : null}
+                <Button onClick={handleLogin} disabled={loading} className="w-full py-3 bg-[#B37142] text-white font-medium rounded-xl hover:from-orange-600 hover:to-orange-700 focus:ring-1 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 shadow-lg">
+                  {loading ? "Signing In..." : "Sign In"}
                 </Button>
 
                 <Separator className="bg-gray-300/50" />

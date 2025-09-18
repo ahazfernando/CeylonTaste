@@ -1,6 +1,5 @@
 "use client";
 
-import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,13 +9,13 @@ import { Crown, Coffee, Eye, EyeOff, User } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 
-export default function SignUp() {
+export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-cream">
-      <main className="container flex items-center justify-center min-h-[calc(100vh-4rem)] py-8">
+      <main className="container flex items-center justify-center min-h-screen py-8">
         <Card className="w-full max-w-md shadow-coffee">
           <CardHeader className="text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
@@ -24,10 +23,10 @@ export default function SignUp() {
               <Coffee className="h-8 w-8 text-primary" />
             </div>
             <CardTitle className="text-2xl bg-gradient-coffee bg-clip-text text-transparent">
-              Join CeylonTaste
+              Welcome Back
             </CardTitle>
             <CardDescription>
-              Create your account to start enjoying our premium products
+              Sign in to your CeylonTaste account to continue your royal experience
             </CardDescription>
           </CardHeader>
 
@@ -124,22 +123,30 @@ export default function SignUp() {
 
           <CardFooter className="flex flex-col space-y-4">
             <Button className="w-full bg-gradient-coffee text-white hover:opacity-90 shadow-warm">
-              Create Account
+              Sign In
             </Button>
 
             <Separator />
 
             <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
+              Don't have an account?{" "}
               <Link
-                href="/auth/login"
+                href="/auth/signup"
                 className="text-accent hover:text-accent/80 font-medium"
               >
-                Sign in
+                Sign up
               </Link>
             </p>
           </CardFooter>
         </Card>
+
+        {/* Sign In Integration Notice */}
+        <div className="fixed bottom-4 right-4 max-w-sm p-4 bg-card border border-accent/20 rounded-lg shadow-warm">
+          <h4 className="font-semibold mb-1 text-sm">Get 10% Off</h4>
+          <p className="text-xs text-muted-foreground">
+            Get 5% Off purchase made over LKR 1000 and 10% off on purchases made over LKR 1500 with Ceylon Taste. 
+          </p>
+        </div>
       </main>
     </div>
   );

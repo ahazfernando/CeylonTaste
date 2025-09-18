@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Navigation } from "@/components/ui/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +21,7 @@ import {
   Edit,
   Trash2
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 // Mock admin data - replace with Supabase data
 const mockStats = {
@@ -42,6 +46,35 @@ const mockProducts = [
 ];
 
 export default function AdminDashboard() {
+  const router = useRouter();
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("http://localhost:4000/api/auth/me", { credentials: "include" })
+      .then(async (r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data) => {
+        const role = data?.user?.role;
+        if (!cancelled && role === "admin") setAuthorized(true);
+        else router.replace("/");
+      })
+      .catch(() => {
+        if (!cancelled) router.replace("/");
+      });
+    return () => { cancelled = true; };
+  }, [router]);
+
+  if (!authorized) {
+    return (
+      <div className="min-h-screen bg-gradient-cream">
+        <Navigation />
+        <main className="container py-8">
+          <p className="text-muted-foreground">Checking access…</p>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-cream">
       <Navigation />
@@ -182,7 +215,7 @@ export default function AdminDashboard() {
                   <CardDescription>Manage your product inventory and pricing</CardDescription>
                 </div>
                 <Button className="bg-gradient-coffee text-white" asChild>
-                  <Link to="/admin/products/new">
+                  <Link href="/admin/products/new">
                     <Plus className="w-4 h-4 mr-2" />
                     Add Product
                   </Link>

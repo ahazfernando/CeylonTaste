@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Menu, X, User, Crown } from "lucide-react";
@@ -15,6 +15,31 @@ interface NavigationProps {
 
 export function Navigation({ cartItemCount = 0 }: NavigationProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<null | { id: string; role: string; name?: string; email?: string }>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("http://localhost:4000/api/auth/me", { credentials: "include" })
+      .then(async (r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data) => {
+        if (!cancelled) setCurrentUser(data?.user || null);
+      })
+      .catch(() => {
+        if (!cancelled) setCurrentUser(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function handleLogout() {
+    try {
+      await fetch("http://localhost:4000/api/auth/logout", { method: "POST", credentials: "include" });
+    } finally {
+      setCurrentUser(null);
+      setIsMenuOpen(false);
+    }
+  }
 
   return (
     <div className="sticky top-0 z-50 pt-3 px-4">
@@ -63,16 +88,18 @@ export function Navigation({ cartItemCount = 0 }: NavigationProps) {
             >
               <Link href="/services">Services</Link>
             </Button>
-            <Button 
-              variant="ghost" 
-              className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 font-medium flex items-center gap-1 px-4" 
-              asChild
-            >
-              <Link href="/admin/dashboard">
-                <Crown className="h-4 w-4" />
-                Admin
-              </Link>
-            </Button>
+            {currentUser?.role === "admin" && (
+              <Button 
+                variant="ghost" 
+                className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 font-medium flex items-center gap-1 px-4" 
+                asChild
+              >
+                <Link href="/admin/dashboard">
+                  <Crown className="h-4 w-4" />
+                  Admin
+                </Link>
+              </Button>
+            )}
           </div>
 
           {/* Desktop Actions - Right aligned */}
@@ -102,12 +129,21 @@ export function Navigation({ cartItemCount = 0 }: NavigationProps) {
                 <User className="h-5 w-5" />
               </Link>
             </Button>
-            <Button 
-              className="bg-amber-800 text-white hover:bg-amber-700 px-6 py-2 rounded-full font-medium shadow-sm ml-2" 
-              asChild
-            >
-              <Link href="/login">Login</Link>
-            </Button>
+            {currentUser ? (
+              <Button 
+                className="bg-amber-800 text-white hover:bg-amber-700 px-6 py-2 rounded-full font-medium shadow-sm ml-2" 
+                onClick={handleLogout}
+              >
+                Logout
+              </Button>
+            ) : (
+              <Button 
+                className="bg-amber-800 text-white hover:bg-amber-700 px-6 py-2 rounded-full font-medium shadow-sm ml-2" 
+                asChild
+              >
+                <Link href="/login">Login</Link>
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -153,16 +189,18 @@ export function Navigation({ cartItemCount = 0 }: NavigationProps) {
               >
                 <Link href="/services">Services</Link>
               </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 flex items-center gap-2" 
-                asChild
-              >
-                <Link href="/admin/dashboard">
-                  <Crown className="h-4 w-4" />
-                  Admin
-                </Link>
-              </Button>
+              {currentUser?.role === "admin" && (
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 flex items-center gap-2" 
+                  asChild
+                >
+                  <Link href="/admin/dashboard">
+                    <Crown className="h-4 w-4" />
+                    Admin
+                  </Link>
+                </Button>
+              )}
               <div className="flex items-center gap-3 pt-4 border-t border-amber-200/30">
                 <Button 
                   variant="ghost" 
@@ -189,12 +227,21 @@ export function Navigation({ cartItemCount = 0 }: NavigationProps) {
                     <User className="h-5 w-5" />
                   </Link>
                 </Button>
-                <Button 
-                  className="bg-amber-800 text-white hover:bg-amber-700 flex-1 rounded-full font-medium" 
-                  asChild
-                >
-                  <Link href="/login">Login</Link>
-                </Button>
+                {currentUser ? (
+                  <Button 
+                    className="bg-amber-800 text-white hover:bg-amber-700 flex-1 rounded-full font-medium" 
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </Button>
+                ) : (
+                  <Button 
+                    className="bg-amber-800 text-white hover:bg-amber-700 flex-1 rounded-full font-medium" 
+                    asChild
+                  >
+                    <Link href="/login">Login</Link>
+                  </Button>
+                )}
               </div>
             </div>
           </div>
