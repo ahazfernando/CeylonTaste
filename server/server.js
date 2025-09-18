@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 
 import authRoutes from "./src/routes/auth.js";
+import adminRoutes from "./src/routes/admin.js";
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 
 mongoose
 	.connect(mongoUri)
