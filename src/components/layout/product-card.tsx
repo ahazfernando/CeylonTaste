@@ -14,7 +14,7 @@ interface ProductCardProps {
   rating: number;
   reviewCount: number;
   category: string;
-  isNew?: boolean;
+  isNewProduct?: boolean;
   isFeatured?: boolean;
   className?: string;
 }
@@ -29,7 +29,7 @@ export function ProductCard({
   rating,
   reviewCount,
   category,
-  isNew = false,
+  isNewProduct = false,
   isFeatured = false,
   className,
 }: ProductCardProps) {
@@ -52,7 +52,7 @@ export function ProductCard({
         
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-2">
-          {isNew && (
+          {isNewProduct && (
             <Badge className="bg-accent text-accent-foreground">
               New
             </Badge>

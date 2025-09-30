@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/toaster";
 
 export default function AdminLayout({
   children,
@@ -102,6 +103,7 @@ export default function AdminLayout({
           {children}
         </div>
       </div>
+      <Toaster />
     </div>
   );
 }

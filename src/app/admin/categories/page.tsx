@@ -6,18 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Search, Edit, Trash2, Tags, Coffee, Cake, Sandwich, Cookie } from "lucide-react";
-import { useState } from "react";
+import { Plus, Search, Edit, Trash2, Tags } from "lucide-react";
+import { useState, useEffect } from "react";
 
-const mockCategories = [
-  { id: 1, name: "Pastries", description: "Fresh baked pastries including croissants, danish, and more", productCount: 15, icon: Cookie },
-  { id: 2, name: "Coffee", description: "Premium coffee drinks and espresso-based beverages", productCount: 12, icon: Coffee },
-  { id: 3, name: "Cakes", description: "Custom and ready-made cakes for all occasions", productCount: 8, icon: Cake },
-  { id: 4, name: "Sandwiches", description: "Fresh sandwiches and wraps made to order", productCount: 6, icon: Sandwich },
-];
+type Category = { id: string; name: string; description: string };
 
 export default function AdminCategoriesPage() {
-  const [categories] = useState(mockCategories);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -25,6 +20,38 @@ export default function AdminCategoriesPage() {
     category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     category.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+    fetch('http://localhost:4000/api/categories', { headers })
+      .then((r) => r.json())
+      .then((data) => {
+        const rows: Category[] = (data?.categories || []).map((c: any) => ({ id: c._id || c.id, name: c.name, description: c.description }));
+        setCategories(rows);
+      })
+      .catch(() => {});
+  }, []);
+
+  async function handleDelete(id: string) {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+    const res = await fetch(`http://localhost:4000/api/categories/${id}`, { method: 'DELETE', headers, credentials: 'include' });
+    if (res.ok) setCategories((prev) => prev.filter((c) => c.id !== id));
+  }
+
+  async function handleUpdate(id: string) {
+    const name = prompt('New category name?');
+    if (!name) return;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`http://localhost:4000/api/categories/${id}`, { method: 'PATCH', headers, credentials: 'include', body: JSON.stringify({ name }) });
+    if (res.ok) {
+      const data = await res.json();
+      setCategories((prev) => prev.map((c) => (c.id === id ? { id, name: data.category.name, description: data.category.description } : c)));
+    }
+  }
 
   return (
     <main className="container p-6 space-y-6">
@@ -49,18 +76,44 @@ export default function AdminCategoriesPage() {
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
+                    <form id="createCategoryForm" onSubmit={async (e) => {
+                      e.preventDefault();
+                      const form = e.currentTarget as HTMLFormElement;
+                      const formData = new FormData(form);
+                      const name = String(formData.get('categoryName') || '').trim();
+                      const description = String(formData.get('categoryDescription') || '').trim();
+                      if (!name) return;
+                      const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
+                      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+                      if (token) headers['Authorization'] = `Bearer ${token}`;
+                      const res = await fetch('http://localhost:4000/api/categories', {
+                        method: 'POST',
+                        headers,
+                        credentials: 'include',
+                        body: JSON.stringify({ name, description })
+                      });
+                      if (res.ok) {
+                        const data = await res.json();
+                        setCategories((prev) => [{ id: String(data.category.id), name: data.category.name, description: data.category.description }, ...prev]);
+                        setIsDialogOpen(false);
+                        form.reset();
+                      } else {
+                        // Optionally show error
+                      }
+                    }}>
                     <div className="space-y-2">
                       <Label htmlFor="categoryName" className="text-foreground">Category Name</Label>
-                      <Input id="categoryName" placeholder="Enter category name" className="border-border" />
+                      <Input name="categoryName" id="categoryName" placeholder="Enter category name" className="border-border" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="categoryDescription" className="text-foreground">Description</Label>
-                      <Textarea id="categoryDescription" placeholder="Enter category description" className="border-border" />
+                      <Textarea name="categoryDescription" id="categoryDescription" placeholder="Enter category description" className="border-border" />
                     </div>
                     <div className="flex justify-end gap-3 pt-4">
-                      <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="border-border">Cancel</Button>
-                      <Button className="bg-gradient-primary hover:opacity-90" onClick={() => setIsDialogOpen(false)}>Create Category</Button>
+                      <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="border-border">Cancel</Button>
+                      <Button type="submit" form="createCategoryForm" className="bg-gradient-primary hover:opacity-90">Create Category</Button>
                     </div>
+                    </form>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -73,33 +126,23 @@ export default function AdminCategoriesPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredCategories.map((category) => {
-                const IconComponent = category.icon as any;
                 return (
                   <Card key={category.id} className="border-border shadow-warm hover:shadow-elegant transition-smooth group">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-accent group-hover:bg-gradient-primary transition-smooth">
-                            <IconComponent className="h-6 w-6 text-accent-foreground" />
-                          </div>
                           <div>
                             <CardTitle className="text-lg text-foreground">{category.name}</CardTitle>
-                            <CardDescription className="text-muted-foreground">{category.productCount} products</CardDescription>
+                            <CardDescription className="text-muted-foreground">{category.description}</CardDescription>
                           </div>
                         </div>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-smooth">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-secondary"><Edit className="h-4 w-4 text-muted-foreground" /></Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-destructive/10"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                          <Button onClick={() => handleUpdate(category.id)} variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-secondary"><Edit className="h-4 w-4 text-muted-foreground" /></Button>
+                          <Button onClick={() => handleDelete(category.id)} variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-destructive/10"><Trash2 className="h-4 w-4 text-destructive" /></Button>
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <p className="text-sm text-muted-foreground">{category.description}</p>
-                      <div className="flex items-center justify-between pt-2">
-                        <div className="text-sm text-muted-foreground">{category.productCount} {category.productCount === 1 ? 'product' : 'products'}</div>
-                        <Button variant="outline" size="sm" className="border-border hover:bg-secondary">View Products</Button>
-                      </div>
-                    </CardContent>
+                    
                   </Card>
                 );
               })}

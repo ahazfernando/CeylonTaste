@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigation } from "@/components/ui/navigation";
 import { ProductCard } from "@/components/layout/product-card";
 import { Button } from "@/components/ui/button";
@@ -8,55 +8,32 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter, Grid, List } from "lucide-react";
-
-// Mock product data - replace with Supabase data
-const mockProducts = [
-  {
-    id: "1",
-    name: "Ceylon Gold Premium Coffee",
-    description: "Rich and aromatic premium Ceylon coffee with notes of chocolate and citrus",
-    price: 24.99,
-    originalPrice: 29.99,
-    rating: 4.8,
-    reviewCount: 124,
-    category: "Coffee",
-    isNew: true,
-    isFeatured: true,
-    image: "/placeholder.svg",
-  },
-  {
-    id: "2",
-    name: "Royal Chocolate Cake",
-    description: "Decadent chocolate cake with Ceylon cinnamon and premium cocoa",
-    price: 18.50,
-    rating: 4.9,
-    reviewCount: 89,
-    category: "Cakes",
-    isFeatured: true,
-    image: "/placeholder.svg",
-  },
-  {
-    id: "3",
-    name: "Ceylon Breakfast Blend",
-    description: "Perfect morning blend with strong flavor and smooth finish",
-    price: 19.99,
-    originalPrice: 24.99,
-    rating: 4.6,
-    reviewCount: 67,
-    category: "Coffee",
-    image: "/placeholder.svg",
-  },
-];
-
-const categories = ["All", "Coffee", "Cakes", "Pastries", "Accessories"];
+import { productService, Product } from "@/lib/products";
 
 export default function Products() {
+  const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState("featured");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const filteredProducts = mockProducts.filter(product => {
+  // Load products on component mount
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const productsData = await productService.getAllProducts();
+        setProducts(productsData);
+      } catch (error) {
+        console.error('Failed to load products:', error);
+      }
+    };
+    loadProducts();
+  }, []);
+
+  // Get unique categories from products
+  const categories = ["All", ...Array.from(new Set(products.map(p => p.category)))];
+
+  const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
