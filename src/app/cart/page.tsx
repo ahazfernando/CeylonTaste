@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Plus, Minus, Trash2, ShoppingBag, ArrowLeft, Tag } from "lucide-react";
 import Link from "next/link";
+import { getImageUrl } from "@/lib/utils";
 
 // Mock cart data - replace with Supabase data
 const mockCartItems = [
@@ -62,7 +63,7 @@ export default function Cart() {
                 <CardContent className="p-6">
                   <div className="flex gap-4">
                     <img 
-                      src={item.image} 
+                      src={getImageUrl(item.image)} 
                       alt={item.name}
                       className="w-24 h-24 rounded-lg object-cover"
                     />

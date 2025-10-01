@@ -2,7 +2,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, ShoppingCart, Heart } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getImageUrl } from "@/lib/utils";
 
 interface ProductCardProps {
   id: string;
@@ -45,7 +45,7 @@ export function ProductCard({
     )}>
       <div className="relative overflow-hidden">
         <img 
-          src={image} 
+          src={getImageUrl(image)} 
           alt={name}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
         />
