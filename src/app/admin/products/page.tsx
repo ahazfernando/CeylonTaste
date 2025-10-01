@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Search, Edit, Trash2, Package, Upload, X, Image as ImageIcon } from "lucide-react";
 import { productService, imageUploadService, Product } from "@/lib/products";
+import { getImageUrl } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
 const Products = () => {
@@ -225,7 +226,7 @@ const Products = () => {
       isNewProduct: product.isNewProduct || false,
       isFeatured: product.isFeatured || false,
     });
-    setImagePreview(product.image);
+    setImagePreview(getImageUrl(product.image));
     setImageFile(null); // Reset image file when editing
     setIsEditing(true);
     setEditingProduct(product);
