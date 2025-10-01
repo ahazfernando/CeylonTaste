@@ -125,7 +125,7 @@ export function ProductCard({
       </CardContent>
 
       <CardFooter className="p-4 pt-0">
-        <Button className="w-full bg-gradient-coffee text-white hover:opacity-90">
+        <Button className="w-full cart-button-bg">
           <ShoppingCart className="w-4 h-4 mr-2" />
           Add to Cart
         </Button>

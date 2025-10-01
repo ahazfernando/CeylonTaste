@@ -15,6 +15,7 @@ import { toast } from "@/hooks/use-toast";
 
 const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<{id: string; name: string; description: string}[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -35,22 +36,35 @@ const Products = () => {
   const [imagePreview, setImagePreview] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
 
-  // Load products on component mount
+  // Load products and categories on component mount
   useEffect(() => {
-    const loadProducts = async () => {
+    const loadData = async () => {
       try {
+        // Load products
         const productsData = await productService.getAllProducts();
         setProducts(productsData);
+
+        // Load categories
+        const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
+        const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+        const categoriesResponse = await fetch('http://localhost:4000/api/categories', { headers });
+        const categoriesData = await categoriesResponse.json();
+        const categoriesList = (categoriesData?.categories || []).map((c: any) => ({ 
+          id: c._id || c.id, 
+          name: c.name, 
+          description: c.description 
+        }));
+        setCategories(categoriesList);
       } catch (error) {
-        console.error('Failed to load products:', error);
+        console.error('Failed to load data:', error);
         toast({
           title: "Error",
-          description: "Failed to load products",
+          description: "Failed to load products and categories",
           variant: "destructive",
         });
       }
     };
-    loadProducts();
+    loadData();
   }, []);
 
   const resetForm = () => {
@@ -349,10 +363,17 @@ const Products = () => {
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Coffee">Coffee</SelectItem>
-                    <SelectItem value="Cakes">Cakes</SelectItem>
-                    <SelectItem value="Pastries">Pastries</SelectItem>
-                    <SelectItem value="Accessories">Accessories</SelectItem>
+                    {categories.length > 0 ? (
+                      categories.map((category) => (
+                        <SelectItem key={category.id} value={category.name}>
+                          {category.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="" disabled>
+                        No categories available
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>

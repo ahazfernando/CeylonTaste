@@ -7,19 +7,19 @@
 @layer base {
   :root {
     /* Brand Colors from CeylonTaste Brand Guide */
-    --background: 44 28% 95%;
+    --background: 0 0% 100%;
     --foreground: 15 45% 15%;
 
     /* Coffee & Cream tones */
-    --card: 44 28% 98%;
+    --card: 0 0% 100%;
     --card-foreground: 15 45% 15%;
 
-    --popover: 44 28% 98%;
+    --popover: 0 0% 100%;
     --popover-foreground: 15 45% 15%;
 
     /* Primary: Rich Coffee Brown (Midnight Green from brand) */
     --primary: 15 45% 23%;
-    --primary-foreground: 44 28% 98%;
+    --primary-foreground: 0 0% 100%;
 
     /* Secondary: Warm Coffee Cream */
     --secondary: 32 45% 75%;
@@ -34,7 +34,7 @@
     --accent-foreground: 15 45% 15%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 44 28% 98%;
+    --destructive-foreground: 0 0% 100%;
 
     --border: 44 20% 85%;
     --input: 44 20% 90%;
@@ -51,7 +51,7 @@
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
+    --sidebar-background: 0 0% 100%;
 
     --sidebar-foreground: 240 5.3% 26.1%;
 
@@ -66,6 +66,11 @@
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Cart Button Colors */
+    --cart-button-bg: #8E5D3E;
+    --cart-button-text: #FFFFFF;
+    --cart-button-shadow: 0 4px 12px rgba(15, 8, 6, 0.05);
   }
 
   .dark {
@@ -113,19 +118,27 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
   }
 
-  /* Apply Instrument Sans to code elements */
-  code,
-  pre,
-  kbd,
-  samp {
-    font-family: 'Instrument Sans', monospace;
+  /* Apply Instrument Sans to all text elements */
+  * {
+    font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
   }
+}
 
-  /* Ensure code blocks use the font */
-  pre code {
-    font-family: 'Instrument Sans', monospace;
+@layer utilities {
+  .cart-button-bg {
+    background-color: var(--cart-button-bg);
+    color: var(--cart-button-text);
+    box-shadow: var(--cart-button-shadow);
+  }
+  
+  .cart-button-bg:hover {
+    background-color: var(--cart-button-bg);
+    color: var(--cart-button-text);
+    box-shadow: 0 6px 16px rgba(15, 8, 6, 0.08);
+    transform: translateY(-1px);
+    transition: all 0.2s ease-in-out;
   }
 }
