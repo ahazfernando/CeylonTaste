@@ -1,8 +1,12 @@
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, ShoppingCart, Heart } from "lucide-react";
 import { cn, getImageUrl } from "@/lib/utils";
+import { useCart } from "@/contexts/CartContext";
+import { toast } from "@/hooks/use-toast";
 
 interface ProductCardProps {
   id: string;
@@ -33,9 +37,63 @@ export function ProductCard({
   isFeatured = false,
   className,
 }: ProductCardProps) {
+  const router = useRouter();
+  const { addToCart } = useCart();
+  const [currentUser, setCurrentUser] = useState<null | { id: string; role: string; name?: string; email?: string }>(null);
+  const [loading, setLoading] = useState(true);
+
   const discountPercentage = originalPrice 
     ? Math.round(((originalPrice - price) / originalPrice) * 100)
     : 0;
+
+  // Check authentication status
+  useEffect(() => {
+    let cancelled = false;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+    
+    fetch("http://localhost:4000/api/auth/me", { credentials: "include", headers })
+      .then(async (r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data) => {
+        if (!cancelled) {
+          setCurrentUser(data?.user || null);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setCurrentUser(null);
+          setLoading(false);
+        }
+      });
+    
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleAddToCart = () => {
+    if (!currentUser) {
+      // Redirect to login page if user is not authenticated
+      router.push('/login');
+      return;
+    }
+    
+    // Add item to cart
+    addToCart({
+      id,
+      name,
+      price,
+      category,
+      image
+    });
+    
+    // Show success toast
+    toast({
+      title: "Added to Cart",
+      description: `${name} has been added to your cart`,
+    });
+  };
 
   return (
     <Card className={cn(
@@ -114,20 +172,24 @@ export function ProductCard({
         {/* Price */}
         <div className="flex items-center gap-2">
           <span className="text-xl font-bold text-primary">
-            ${price.toFixed(2)}
+            LKR {price.toFixed(2)}
           </span>
           {originalPrice && (
             <span className="text-sm text-muted-foreground line-through">
-              ${originalPrice.toFixed(2)}
+              LKR {originalPrice.toFixed(2)}
             </span>
           )}
         </div>
       </CardContent>
 
       <CardFooter className="p-4 pt-0">
-        <Button className="w-full cart-button-bg">
+        <Button 
+          className="w-full cart-button-bg"
+          onClick={handleAddToCart}
+          disabled={loading}
+        >
           <ShoppingCart className="w-4 h-4 mr-2" />
-          Add to Cart
+          {loading ? "Loading..." : currentUser ? "Add to Cart" : "Login to Add"}
         </Button>
       </CardFooter>
     </Card>

@@ -68,7 +68,7 @@ export default function AdminDashboard() {
                 <div>
                   <p className="text-sm text-muted-foreground">Total Revenue</p>
                   <p className="text-2xl font-bold text-primary">
-                    ${mockStats.totalRevenue.toLocaleString()}
+                    LKR {mockStats.totalRevenue.toLocaleString()}
                   </p>
                   <div className="flex items-center text-sm text-green-600 mt-1">
                     <TrendingUp className="w-4 h-4 mr-1" />

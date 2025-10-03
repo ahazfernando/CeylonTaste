@@ -8,14 +8,19 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
 import primaryLogo from "@/assets/Home/CeylonTaste-Primary-2.png";
+import { useCart } from "@/contexts/CartContext";
 
 interface NavigationProps {
   cartItemCount?: number;
 }
 
-export function Navigation({ cartItemCount = 0 }: NavigationProps) {
+export function Navigation({ cartItemCount }: NavigationProps) {
+  const { getTotalItems } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<null | { id: string; role: string; name?: string; email?: string }>(null);
+  
+  // Use cart context count if no prop is provided
+  const actualCartCount = cartItemCount !== undefined ? cartItemCount : getTotalItems();
 
   useEffect(() => {
     let cancelled = false;
@@ -115,9 +120,9 @@ export function Navigation({ cartItemCount = 0 }: NavigationProps) {
             >
               <Link href="/cart">
                 <ShoppingCart className="h-5 w-5" />
-                {cartItemCount > 0 && (
+                {actualCartCount > 0 && (
                   <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-amber-600 text-white">
-                    {cartItemCount}
+                    {actualCartCount}
                   </Badge>
                 )}
               </Link>
@@ -213,9 +218,9 @@ export function Navigation({ cartItemCount = 0 }: NavigationProps) {
                 >
                   <Link href="/cart">
                     <ShoppingCart className="h-5 w-5" />
-                    {cartItemCount > 0 && (
+                    {actualCartCount > 0 && (
                       <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-amber-600 text-white">
-                        {cartItemCount}
+                        {actualCartCount}
                       </Badge>
                     )}
                   </Link>

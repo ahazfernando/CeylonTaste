@@ -134,7 +134,7 @@ export default function Profile() {
                           {order.status}
                         </Badge>
                         <div className="font-bold text-primary mt-1">
-                          ${order.total.toFixed(2)}
+                          LKR {order.total.toFixed(2)}
                         </div>
                       </div>
                     </div>

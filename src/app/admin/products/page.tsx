@@ -512,7 +512,7 @@ const Products = () => {
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">{product.description}</p>
               <div className="flex items-center justify-between">
-                <span className="text-2xl font-bold text-foreground">${product.price}</span>
+                <span className="text-2xl font-bold text-foreground">LKR {product.price}</span>
                 {getStockBadge(product.stock || 0)}
               </div>
               <div className="flex items-center justify-between text-sm">

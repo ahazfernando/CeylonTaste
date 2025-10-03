@@ -46,7 +46,7 @@ export default function AdminCustomersPage() {
               <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total Customers</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-foreground">{customers.length}</div></CardContent></Card>
               <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">VIP Customers</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-accent">{customers.filter(c => c.status === "vip").length}</div></CardContent></Card>
               <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Active This Month</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-success">{customers.filter(c => c.status === "active").length}</div></CardContent></Card>
-              <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-foreground">${customers.reduce((sum, c) => sum + c.totalSpent, 0).toFixed(2)}</div></CardContent></Card>
+              <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-foreground">LKR {customers.reduce((sum, c) => sum + c.totalSpent, 0).toFixed(2)}</div></CardContent></Card>
             </div>
 
             <div className="relative max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" /><Input placeholder="Search customers..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 border-border" /></div>
@@ -62,7 +62,7 @@ export default function AdminCustomersPage() {
                         <TableCell><div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-accent"><Users className="h-5 w-5 text-accent-foreground" /></div><div><div className="font-medium text-foreground">{customer.name}</div><div className="text-sm text-muted-foreground">ID: {customer.id}</div></div></div></TableCell>
                         <TableCell><div className="space-y-1"><div className="flex items-center gap-2 text-sm text-muted-foreground"><Mail className="h-3 w-3" />{customer.email}</div><div className="flex items-center gap-2 text-sm text-muted-foreground"><Phone className="h-3 w-3" />{customer.phone}</div></div></TableCell>
                         <TableCell className="font-medium text-foreground">{customer.totalOrders}</TableCell>
-                        <TableCell className="font-medium text-foreground">${customer.totalSpent.toFixed(2)}</TableCell>
+                        <TableCell className="font-medium text-foreground">LKR {customer.totalSpent.toFixed(2)}</TableCell>
                         <TableCell className="text-muted-foreground">{customer.lastOrder}</TableCell>
                         <TableCell><StatusBadge status={customer.status} /></TableCell>
                         <TableCell><Button variant="ghost" size="sm" className="h-8 w-8 p-0"><Eye className="h-4 w-4 text-muted-foreground" /></Button></TableCell>

@@ -61,7 +61,7 @@ export default function AdminOrdersPage() {
               <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-warning">{orders.filter(o => o.status === "pending").length}</div></CardContent></Card>
               <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Preparing</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-primary">{orders.filter(o => o.status === "preparing").length}</div></CardContent></Card>
               <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Ready</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-success">{orders.filter(o => o.status === "ready").length}</div></CardContent></Card>
-              <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Today's Revenue</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-foreground">${orders.filter(o => o.date === "2024-01-15" && o.status !== "cancelled").reduce((sum, o) => sum + o.total, 0).toFixed(2)}</div></CardContent></Card>
+              <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Today's Revenue</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-foreground">LKR {orders.filter(o => o.date === "2024-01-15" && o.status !== "cancelled").reduce((sum, o) => sum + o.total, 0).toFixed(2)}</div></CardContent></Card>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -80,7 +80,7 @@ export default function AdminOrdersPage() {
                         <TableCell className="font-medium text-foreground">{order.id}</TableCell>
                         <TableCell className="text-foreground">{order.customer}</TableCell>
                         <TableCell className="text-muted-foreground max-w-xs truncate">{order.items}</TableCell>
-                        <TableCell className="font-medium text-foreground">${order.total.toFixed(2)}</TableCell>
+                        <TableCell className="font-medium text-foreground">LKR {order.total.toFixed(2)}</TableCell>
                         <TableCell><StatusBadge status={order.status} /></TableCell>
                         <TableCell className="text-muted-foreground"><div><div>{order.date}</div><div className="text-xs">{order.time}</div></div></TableCell>
                         <TableCell>
