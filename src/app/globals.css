@@ -53,19 +53,19 @@
 
     --sidebar-background: 0 0% 100%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-foreground: 15 45% 15%;
 
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary: 15 45% 23%;
 
-    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-primary-foreground: 0 0% 100%;
 
-    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent: 32 45% 75%;
 
-    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-accent-foreground: 15 45% 15%;
 
-    --sidebar-border: 220 13% 91%;
+    --sidebar-border: 44 20% 85%;
 
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 32 45% 65%;
 
     /* Cart Button Colors */
     --cart-button-bg: #8E5D3E;

@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 
 export default function AdminLayout({
   children,
@@ -89,21 +90,22 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-cream">
-      <div className="flex">
-        <AdminSidebar />
-        <div className="flex-1">
-          <div className="w-full bg-white/70 backdrop-blur border-b">
-            <div className="container flex items-center justify-end py-3">
-              <Button className="bg-amber-800 text-white hover:bg-amber-700" onClick={handleLogout}>
-                Logout
-              </Button>
-            </div>
+    <SidebarProvider>
+      <AdminSidebar />
+      <SidebarInset>
+        <div className="w-full bg-white/70 backdrop-blur border-b">
+          <div className="container flex items-center justify-between py-3">
+            <SidebarTrigger />
+            <Button className="bg-amber-800 text-white hover:bg-amber-700" onClick={handleLogout}>
+              Logout
+            </Button>
           </div>
+        </div>
+        <div className="min-h-screen bg-gradient-cream">
           {children}
         </div>
-      </div>
+      </SidebarInset>
       <Toaster />
-    </div>
+    </SidebarProvider>
   );
 }

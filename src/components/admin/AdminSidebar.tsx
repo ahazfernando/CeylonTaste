@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
 import { 
   BarChart3, 
   Package, 
@@ -13,6 +12,20 @@ import {
   Coffee,
   Settings,
 } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 
 const menuItems = [
   { title: "Analytics", url: "/admin/dashboard", icon: BarChart3 },
@@ -26,36 +39,81 @@ const menuItems = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const [userName, setUserName] = useState("Admin");
   const isActive = (path: string) => pathname === path;
 
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+    
+    fetch("http://localhost:4000/api/auth/me", { credentials: "include", headers })
+      .then(async (r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data) => {
+        if (data?.user?.name) {
+          setUserName(data.user.name);
+        }
+      })
+      .catch(() => {
+        // Keep default "Admin" if fetch fails
+      });
+  }, []);
+
   return (
-    <aside className="w-64 flex-col border-r bg-card hidden md:flex">
-      <div className="p-4 border-b">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-primary shadow-warm">
-            <Coffee className="h-6 w-6 text-primary-foreground" />
+    <Sidebar variant="inset" collapsible="icon">
+      <SidebarHeader>
+        <div className="flex items-center gap-2 px-2 py-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
+            <Coffee className="h-4 w-4 text-sidebar-primary-foreground" />
           </div>
-          <div>
-            <h1 className="text-lg font-bold">Sweet Admin</h1>
-            <p className="text-xs text-muted-foreground">Bakery & Cafe</p>
+          <div className="grid flex-1 text-left text-sm leading-tight">
+            <span className="truncate font-semibold">{userName}</span>
+            <span className="truncate text-xs text-sidebar-foreground/70">Bakery & Cafe</span>
           </div>
         </div>
-      </div>
-
-      <nav className="flex-1 p-4 space-y-1">
-        {menuItems.map((item) => (
-          <Link key={item.title} href={item.url} className={cn(
-            "flex items-center gap-3 px-3 py-2 rounded-lg transition",
-            isActive(item.url)
-              ? "bg-gradient-primary text-primary-foreground shadow-warm"
-              : "hover:bg-secondary/60 text-muted-foreground hover:text-foreground"
-          )}>
-            <item.icon className="h-5 w-5" />
-            <span>{item.title}</span>
-          </Link>
-        ))}
-      </nav>
-    </aside>
+      </SidebarHeader>
+      
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {menuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={isActive(item.url)}
+                    tooltip={item.title}
+                  >
+                    <Link href={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild>
+              <div className="flex items-center gap-2 px-2 py-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
+                  <Coffee className="h-4 w-4 text-sidebar-primary-foreground" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">{userName}</span>
+                  <span className="truncate text-xs text-sidebar-foreground/70">Admin</span>
+                </div>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
   );
 }
 

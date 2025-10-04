@@ -16,48 +16,149 @@ import {
   Plus,
   Eye,
   Edit,
-  Trash2
+  Trash2,
+  Loader2
 } from "lucide-react";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 
-// Mock admin data - replace with Supabase data
-const mockStats = {
-  totalRevenue: 15420.50,
-  totalOrders: 342,
-  totalProducts: 48,
-  totalCustomers: 1250,
-  revenueGrowth: 12.5,
-  orderGrowth: 8.3
-};
+interface DashboardStats {
+  totalRevenue: number;
+  totalOrders: number;
+  totalProducts: number;
+  totalCustomers: number;
+  revenueGrowth: number;
+  orderGrowth: number;
+}
 
-const mockRecentOrders = [
-  { id: "ORD-345", customer: "John Doe", total: 45.99, status: "Processing" },
-  { id: "ORD-344", customer: "Jane Smith", total: 28.50, status: "Delivered" },
-  { id: "ORD-343", customer: "Mike Johnson", total: 67.25, status: "Shipped" }
-];
+interface RecentOrder {
+  _id: string;
+  orderNumber: string;
+  user?: {
+    name: string;
+    email: string;
+  } | null;
+  total: number;
+  status: string;
+  createdAt: string;
+}
 
-const mockProducts = [
-  { id: "1", name: "Ceylon Gold Coffee", stock: 45, price: 24.99, status: "In Stock" },
-  { id: "2", name: "Royal Chocolate Cake", stock: 12, price: 18.50, status: "Low Stock" },
-  { id: "3", name: "Ceylon Breakfast Blend", stock: 0, price: 19.99, status: "Out of Stock" }
-];
+interface LowStockProduct {
+  _id: string;
+  name: string;
+  stock: number;
+  price: number;
+}
+
+interface DashboardData {
+  stats: DashboardStats;
+  recentOrders: RecentOrder[];
+  lowStockProducts: LowStockProduct[];
+}
 
 export default function AdminDashboard() {
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
+        const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+        
+        const response = await fetch("http://localhost:4000/api/admin/dashboard/stats", { 
+          credentials: "include", 
+          headers 
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setDashboardData(data);
+        } else {
+          setError('Failed to fetch dashboard data');
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        setError('Failed to fetch dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "delivered":
+        return <Badge variant="default">Delivered</Badge>;
+      case "processing":
+        return <Badge variant="secondary">Processing</Badge>;
+      case "shipped":
+        return <Badge variant="outline">Shipped</Badge>;
+      case "pending":
+        return <Badge variant="outline">Pending</Badge>;
+      case "cancelled":
+        return <Badge variant="destructive">Cancelled</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const getStockStatus = (stock: number) => {
+    if (stock === 0) return { status: "Out of Stock", variant: "destructive" as const };
+    if (stock <= 10) return { status: "Low Stock", variant: "secondary" as const };
+    return { status: "In Stock", variant: "default" as const };
+  };
+
+  if (loading) {
+    return (
+      <main className="container py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+            <p className="text-muted-foreground">Loading dashboard...</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (error || !dashboardData) {
+    return (
+      <main className="container py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-destructive mb-4">{error || 'Failed to load dashboard data'}</p>
+            <Button onClick={() => window.location.reload()}>Retry</Button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  const { stats, recentOrders, lowStockProducts } = dashboardData;
   return (
     <main className="container py-8">
         {/* Admin Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-coffee bg-clip-text text-transparent flex items-center gap-2">
-              <Crown className="w-8 h-8 text-accent" />
+            <h1 className="text-3xl font-bold bg-black bg-clip-text text-transparent flex items-center gap-2">
               Admin Dashboard
             </h1>
             <p className="text-muted-foreground">Manage your CeylonTaste business</p>
           </div>
-          <Badge className="bg-gradient-royal text-white">
-            <Coffee className="w-4 h-4 mr-1" />
-            Admin Access
-          </Badge>
         </div>
 
         {/* Stats Overview */}
@@ -68,11 +169,11 @@ export default function AdminDashboard() {
                 <div>
                   <p className="text-sm text-muted-foreground">Total Revenue</p>
                   <p className="text-2xl font-bold text-primary">
-                    LKR {mockStats.totalRevenue.toLocaleString()}
+                    LKR {stats.totalRevenue.toLocaleString()}
                   </p>
                   <div className="flex items-center text-sm text-green-600 mt-1">
                     <TrendingUp className="w-4 h-4 mr-1" />
-                    +{mockStats.revenueGrowth}%
+                    +{stats.revenueGrowth}%
                   </div>
                 </div>
                 <DollarSign className="w-8 h-8 text-accent" />
@@ -85,10 +186,10 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Orders</p>
-                  <p className="text-2xl font-bold text-primary">{mockStats.totalOrders}</p>
+                  <p className="text-2xl font-bold text-primary">{stats.totalOrders}</p>
                   <div className="flex items-center text-sm text-green-600 mt-1">
                     <TrendingUp className="w-4 h-4 mr-1" />
-                    +{mockStats.orderGrowth}%
+                    +{stats.orderGrowth}%
                   </div>
                 </div>
                 <ShoppingCart className="w-8 h-8 text-accent" />
@@ -101,7 +202,7 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Products</p>
-                  <p className="text-2xl font-bold text-primary">{mockStats.totalProducts}</p>
+                  <p className="text-2xl font-bold text-primary">{stats.totalProducts}</p>
                   <p className="text-sm text-muted-foreground mt-1">Active inventory</p>
                 </div>
                 <Package className="w-8 h-8 text-accent" />
@@ -114,7 +215,7 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Customers</p>
-                  <p className="text-2xl font-bold text-primary">{mockStats.totalCustomers}</p>
+                  <p className="text-2xl font-bold text-primary">{stats.totalCustomers}</p>
                   <p className="text-sm text-muted-foreground mt-1">Registered users</p>
                 </div>
                 <Users className="w-8 h-8 text-accent" />
@@ -145,29 +246,33 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockRecentOrders.map((order) => (
-                    <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <div className="font-semibold">{order.id}</div>
-                        <div className="text-sm text-muted-foreground">{order.customer}</div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <div className="font-bold text-primary">${order.total}</div>
-                          <Badge variant={
-                            order.status === "Delivered" ? "default" : 
-                            order.status === "Processing" ? "secondary" : 
-                            "outline"
-                          }>
-                            {order.status}
-                          </Badge>
+                  {recentOrders.length > 0 ? (
+                    recentOrders.map((order) => (
+                      <div key={order._id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <div className="font-semibold">{order.orderNumber}</div>
+                          <div className="text-sm text-muted-foreground">{order.user?.name || 'Unknown User'}</div>
+                          <div className="text-xs text-muted-foreground">{formatDate(order.createdAt)}</div>
                         </div>
-                        <Button variant="ghost" size="icon">
-                          <Eye className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <div className="font-bold text-primary">LKR {order.total.toFixed(2)}</div>
+                            {getStatusBadge(order.status)}
+                          </div>
+                          <Button variant="ghost" size="icon" asChild>
+                            <Link href={`/admin/orders`}>
+                              <Eye className="w-4 h-4" />
+                            </Link>
+                          </Button>
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <ShoppingCart className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>No recent orders found</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -177,8 +282,8 @@ export default function AdminDashboard() {
             <Card className="shadow-warm">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle>Product Management</CardTitle>
-                  <CardDescription>Manage your product inventory and pricing</CardDescription>
+                  <CardTitle>Low Stock Products</CardTitle>
+                  <CardDescription>Products that need restocking attention</CardDescription>
                 </div>
                 <Button className="bg-gradient-coffee text-white" asChild>
                   <Link href="/admin/products/new">
@@ -189,39 +294,46 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockProducts.map((product) => (
-                    <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <div className="font-semibold">{product.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Stock: {product.stock} units
+                  {lowStockProducts.length > 0 ? (
+                    lowStockProducts.map((product) => {
+                      const stockStatus = getStockStatus(product.stock);
+                      return (
+                        <div key={product._id} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div className="flex-1">
+                            <div className="font-semibold">{product.name}</div>
+                            <div className="text-sm text-muted-foreground">
+                              Stock: {product.stock} units
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-right">
+                              <div className="font-bold text-primary">LKR {product.price.toFixed(2)}</div>
+                              <Badge variant={stockStatus.variant}>
+                                {stockStatus.status}
+                              </Badge>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button variant="ghost" size="icon" asChild>
+                                <Link href={`/admin/products`}>
+                                  <Eye className="w-4 h-4" />
+                                </Link>
+                              </Button>
+                              <Button variant="ghost" size="icon" asChild>
+                                <Link href={`/admin/products`}>
+                                  <Edit className="w-4 h-4" />
+                                </Link>
+                              </Button>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <div className="font-bold text-primary">${product.price}</div>
-                          <Badge variant={
-                            product.status === "In Stock" ? "default" :
-                            product.status === "Low Stock" ? "secondary" :
-                            "destructive"
-                          }>
-                            {product.status}
-                          </Badge>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="icon">
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon">
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="text-destructive">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>All products are well stocked!</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>

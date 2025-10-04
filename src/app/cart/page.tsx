@@ -71,7 +71,7 @@ export default function Cart() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold bg-gradient-coffee bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-black bg-clip-text text-transparent">
             Shopping Cart
           </h1>
           <Badge className="bg-accent/20 text-accent-foreground">
@@ -177,7 +177,7 @@ export default function Cart() {
           <div>
             <Card className="shadow-coffee sticky top-8">
               <CardHeader>
-                <CardTitle className="bg-gradient-coffee bg-clip-text text-transparent">
+                <CardTitle className="bg-black bg-clip-text text-transparent">
                   Order Summary
                 </CardTitle>
               </CardHeader>
@@ -208,7 +208,7 @@ export default function Cart() {
               
               <CardFooter className="flex flex-col gap-3">
                 <Button 
-                  className="w-full bg-gradient-coffee text-white hover:opacity-90 shadow-warm"
+                  className="w-full bg-amber-800 text-white hover:bg-amber-700 shadow-lg font-semibold"
                   onClick={handleProceedToCheckout}
                   disabled={loading}
                 >
@@ -223,9 +223,6 @@ export default function Cart() {
               </CardFooter>
             </Card>
           </div>
-        </div>
-        <div className="mt-12 p-6 bg-card rounded-lg border border-accent/20 shadow-warm">
-          <h3 className="font-semibold mb-2 text-primary">Shopping Cart Ready</h3>
         </div>
       </main>
     </div>

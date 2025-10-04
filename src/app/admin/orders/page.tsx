@@ -6,27 +6,43 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Search, Eye, Clock, CheckCircle, XCircle, Package } from "lucide-react";
-import { useState } from "react";
+import { Search, Eye, Clock, CheckCircle, XCircle, Package, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 
-const mockOrders = [
-  { id: "ORD-001", customer: "Sarah Johnson", items: "Chocolate Croissant x2, Cappuccino x1", total: 14.00, status: "pending", date: "2024-01-15", time: "09:30 AM" },
-  { id: "ORD-002", customer: "Mike Chen", items: "Red Velvet Cake x1", total: 28.00, status: "preparing", date: "2024-01-15", time: "10:15 AM" },
-  { id: "ORD-003", customer: "Emma Davis", items: "Blueberry Muffin x3, Coffee x2", total: 22.25, status: "ready", date: "2024-01-15", time: "11:00 AM" },
-  { id: "ORD-004", customer: "David Wilson", items: "Espresso x3, Croissant x1", total: 13.25, status: "completed", date: "2024-01-15", time: "08:45 AM" },
-  { id: "ORD-005", customer: "Lisa Brown", items: "Custom Birthday Cake", total: 45.00, status: "cancelled", date: "2024-01-14", time: "02:30 PM" },
-];
+interface OrderItem {
+  product: {
+    _id: string;
+    name: string;
+    image: string;
+  } | null;
+  quantity: number;
+  price: number;
+}
+
+interface Order {
+  _id: string;
+  orderNumber: string;
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  items: OrderItem[];
+  total: number;
+  status: string;
+  createdAt: string;
+}
 
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
     case "pending":
       return <Badge className="bg-warning text-warning-foreground"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
-    case "preparing":
-      return <Badge className="bg-primary text-primary-foreground"><Package className="h-3 w-3 mr-1" />Preparing</Badge>;
-    case "ready":
-      return <Badge className="bg-success text-success-foreground"><CheckCircle className="h-3 w-3 mr-1" />Ready</Badge>;
-    case "completed":
-      return <Badge className="bg-muted text-muted-foreground"><CheckCircle className="h-3 w-3 mr-1" />Completed</Badge>;
+    case "processing":
+      return <Badge className="bg-primary text-primary-foreground"><Package className="h-3 w-3 mr-1" />Processing</Badge>;
+    case "shipped":
+      return <Badge className="bg-success text-success-foreground"><CheckCircle className="h-3 w-3 mr-1" />Shipped</Badge>;
+    case "delivered":
+      return <Badge className="bg-muted text-muted-foreground"><CheckCircle className="h-3 w-3 mr-1" />Delivered</Badge>;
     case "cancelled":
       return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Cancelled</Badge>;
     default:
@@ -35,23 +51,119 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 const statusFlow: Record<string, string[]> = {
-  pending: ["preparing", "cancelled"],
-  preparing: ["ready", "cancelled"],
-  ready: ["completed"],
-  completed: [],
+  pending: ["processing", "cancelled"],
+  processing: ["shipped", "cancelled"],
+  shipped: ["delivered"],
+  delivered: [],
   cancelled: [],
 };
 
 export default function AdminOrdersPage() {
-  const [orders] = useState(mockOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
+        const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+        
+        const response = await fetch("http://localhost:4000/api/orders/admin/all", { 
+          credentials: "include", 
+          headers 
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setOrders(data.orders || []);
+        }
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
 
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.customer.toLowerCase().includes(searchTerm.toLowerCase()) || order.id.toLowerCase().includes(searchTerm.toLowerCase()) || order.items.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = 
+      order.user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.items.some(item => item.product?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getItemsString = (items: OrderItem[]) => {
+    return items.map(item => {
+      const productName = item.product?.name || 'Deleted Product';
+      return `${productName} x${item.quantity}`;
+    }).join(", ");
+  };
+
+  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+    setUpdatingStatus(orderId);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
+      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      const response = await fetch(`http://localhost:4000/api/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers
+        },
+        credentials: 'include',
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (response.ok) {
+        // Update the order in the local state
+        setOrders(prevOrders => 
+          prevOrders.map(order => 
+            order._id === orderId 
+              ? { ...order, status: newStatus }
+              : order
+          )
+        );
+      } else {
+        console.error('Failed to update order status');
+      }
+    } catch (error) {
+      console.error('Error updating order status:', error);
+    } finally {
+      setUpdatingStatus(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <main className="container p-6 space-y-6">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold text-foreground">Orders</h1>
+          <p className="text-muted-foreground">Manage and track customer orders</p>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Loading orders...</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="container p-6 space-y-6">
@@ -59,14 +171,14 @@ export default function AdminOrdersPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-warning">{orders.filter(o => o.status === "pending").length}</div></CardContent></Card>
-              <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Preparing</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-primary">{orders.filter(o => o.status === "preparing").length}</div></CardContent></Card>
-              <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Ready</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-success">{orders.filter(o => o.status === "ready").length}</div></CardContent></Card>
-              <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Today's Revenue</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-foreground">LKR {orders.filter(o => o.date === "2024-01-15" && o.status !== "cancelled").reduce((sum, o) => sum + o.total, 0).toFixed(2)}</div></CardContent></Card>
+              <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Processing</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-primary">{orders.filter(o => o.status === "processing").length}</div></CardContent></Card>
+              <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Delivered</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-success">{orders.filter(o => o.status === "delivered").length}</div></CardContent></Card>
+              <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-foreground">LKR {orders.filter(o => ["delivered", "shipped"].includes(o.status)).reduce((sum, o) => sum + o.total, 0).toFixed(2)}</div></CardContent></Card>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1 max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" /><Input placeholder="Search orders..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 border-border" /></div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-48 border-border"><SelectValue placeholder="Filter by status" /></SelectTrigger><SelectContent><SelectItem value="all">All Orders</SelectItem><SelectItem value="pending">Pending</SelectItem><SelectItem value="preparing">Preparing</SelectItem><SelectItem value="ready">Ready</SelectItem><SelectItem value="completed">Completed</SelectItem><SelectItem value="cancelled">Cancelled</SelectItem></SelectContent></Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-48 border-border"><SelectValue placeholder="Filter by status" /></SelectTrigger><SelectContent><SelectItem value="all">All Orders</SelectItem><SelectItem value="pending">Pending</SelectItem><SelectItem value="processing">Processing</SelectItem><SelectItem value="shipped">Shipped</SelectItem><SelectItem value="delivered">Delivered</SelectItem><SelectItem value="cancelled">Cancelled</SelectItem></SelectContent></Select>
             </div>
 
             <Card className="border-border shadow-warm">
@@ -76,22 +188,33 @@ export default function AdminOrdersPage() {
                   <TableHeader><TableRow className="border-border"><TableHead className="text-foreground">Order ID</TableHead><TableHead className="text-foreground">Customer</TableHead><TableHead className="text-foreground">Items</TableHead><TableHead className="text-foreground">Total</TableHead><TableHead className="text-foreground">Status</TableHead><TableHead className="text-foreground">Date & Time</TableHead><TableHead className="text-foreground">Actions</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {filteredOrders.map((order) => (
-                      <TableRow key={order.id} className="border-border">
-                        <TableCell className="font-medium text-foreground">{order.id}</TableCell>
-                        <TableCell className="text-foreground">{order.customer}</TableCell>
-                        <TableCell className="text-muted-foreground max-w-xs truncate">{order.items}</TableCell>
+                      <TableRow key={order._id} className="border-border">
+                        <TableCell className="font-medium text-foreground">{order.orderNumber}</TableCell>
+                        <TableCell className="text-foreground">{order.user.name}</TableCell>
+                        <TableCell className="text-muted-foreground max-w-xs truncate">{getItemsString(order.items)}</TableCell>
                         <TableCell className="font-medium text-foreground">LKR {order.total.toFixed(2)}</TableCell>
                         <TableCell><StatusBadge status={order.status} /></TableCell>
-                        <TableCell className="text-muted-foreground"><div><div>{order.date}</div><div className="text-xs">{order.time}</div></div></TableCell>
+                        <TableCell className="text-muted-foreground">{formatDate(order.createdAt)}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0"><Eye className="h-4 w-4 text-muted-foreground" /></Button>
                             {statusFlow[order.status]?.length > 0 && (
-                              <Select defaultValue={order.status}>
-                                <SelectTrigger className="w-24 h-8 border-border"><SelectValue /></SelectTrigger>
+                              <Select 
+                                value={order.status} 
+                                onValueChange={(newStatus) => handleStatusUpdate(order._id, newStatus)}
+                                disabled={updatingStatus === order._id}
+                              >
+                                <SelectTrigger className="w-24 h-8 border-border">
+                                  <SelectValue />
+                                  {updatingStatus === order._id && (
+                                    <Loader2 className="h-3 w-3 animate-spin ml-1" />
+                                  )}
+                                </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value={order.status}>{order.status}</SelectItem>
-                                  {statusFlow[order.status].map((s) => (<SelectItem key={s} value={s}>{s}</SelectItem>))}
+                                  {statusFlow[order.status].map((s) => (
+                                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                                  ))}
                                 </SelectContent>
                               </Select>
                             )}

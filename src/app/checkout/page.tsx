@@ -29,7 +29,7 @@ export default function Checkout() {
     address: "",
     city: "",
     postalCode: "",
-    paymentMethod: "card",
+    paymentMethod: "credit_card",
     cardNumber: "",
     expiryDate: "",
     cvv: "",
@@ -98,21 +98,71 @@ export default function Checkout() {
 
     setOrderLoading(true);
     try {
-      // TODO: Implement actual order placement
-      console.log('Placing order:', { formData, items: cartItems, total });
+      // Prepare order data
+      const orderData = {
+        items: cartItems.map(item => ({
+          product: item.id, // This is the MongoDB _id from the product service
+          quantity: item.quantity,
+          price: item.price
+        })),
+        subtotal: subtotal,
+        shipping: shipping,
+        tax: tax,
+        total: total,
+        shippingAddress: {
+          street: formData.address,
+          city: formData.city,
+          state: formData.city, // Using city as state for now
+          zipCode: formData.postalCode,
+          country: "Sri Lanka"
+        },
+        paymentMethod: formData.paymentMethod,
+        notes: `Payment method: ${formData.paymentMethod}`
+      };
+
+      console.log('Placing order:', orderData);
+      console.log('Cart items:', cartItems);
       
-      // Simulate order placement
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Create order via API
+      const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
+      console.log('Token:', token);
+      
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      };
+
+      console.log('Request headers:', headers);
+      console.log('Request URL:', 'http://localhost:4000/api/orders');
+
+      const response = await fetch('http://localhost:4000/api/orders', {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify(orderData)
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Order creation failed:', errorData);
+        throw new Error(errorData.error || 'Failed to create order');
+      }
+
+      const result = await response.json();
+      console.log('Order created successfully:', result);
       
       // Clear cart after successful order
       clearCart();
       
       // Redirect to success page or show success message
-      alert('Order placed successfully!');
+      alert(`Order placed successfully! Order number: ${result.order.orderNumber}`);
       router.push('/profile');
     } catch (error) {
       console.error('Order placement failed:', error);
-      alert('Failed to place order. Please try again.');
+      alert(`Failed to place order: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setOrderLoading(false);
     }
@@ -259,12 +309,12 @@ export default function Checkout() {
                     onChange={handleInputChange}
                     className="w-full p-2 border border-border rounded-md"
                   >
-                    <option value="card">Credit/Debit Card</option>
-                    <option value="cash">Cash on Delivery</option>
+                    <option value="credit_card">Credit/Debit Card</option>
+                    <option value="cash_on_delivery">Cash on Delivery</option>
                   </select>
                 </div>
 
-                {formData.paymentMethod === "card" && (
+                {formData.paymentMethod === "credit_card" && (
                   <>
                     <div className="space-y-2">
                       <Label htmlFor="cardName">Name on Card *</Label>
