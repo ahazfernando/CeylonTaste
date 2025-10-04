@@ -57,9 +57,12 @@ const orderSchema = new mongoose.Schema({
   shippingAddress: {
     street: String,
     city: String,
-    state: String,
+    province: String,
     zipCode: String,
-    country: String
+    country: String,
+    phone: String,
+    fullName: String,
+    email: String
   },
   paymentMethod: {
     type: String,

@@ -10,7 +10,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { User, Crown, ShoppingBag, Heart, Settings, Star, Calendar, MapPin } from "lucide-react";
+import { User, Crown, ShoppingBag, Heart, Settings, Star, Calendar, MapPin, Plus, Edit, Smile } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 // Order interface
 interface OrderItem {
@@ -38,6 +39,14 @@ interface UserData {
   email: string;
   role: string;
   createdAt: string;
+  address?: {
+    street: string;
+    city: string;
+    province: string;
+    zipCode: string;
+    country: string;
+    phone: string;
+  };
 }
 
 export default function Profile() {
@@ -45,6 +54,17 @@ export default function Profile() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [addressForm, setAddressForm] = useState({
+    street: "",
+    city: "",
+    province: "",
+    zipCode: "",
+    country: "Sri Lanka",
+    phone: ""
+  });
+  const [savingAddress, setSavingAddress] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -144,6 +164,87 @@ export default function Profile() {
     });
   };
 
+  const handleAddressInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setAddressForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSaveAddress = async () => {
+    if (!user) return;
+    
+    // Validate required fields
+    if (!addressForm.street || !addressForm.city || !addressForm.province || !addressForm.zipCode || !addressForm.phone) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields (Street, City, Province, Postal Code, Phone)",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setSavingAddress(true);
+    
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      };
+
+      const response = await fetch(`http://localhost:4000/api/auth/profile`, {
+        method: 'PUT',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({ address: addressForm })
+      });
+
+      if (response.ok) {
+        const updatedUser = await response.json();
+        setUser(updatedUser.user);
+        setShowAddressForm(false);
+        setAddressForm({
+          street: "",
+          city: "",
+          province: "",
+          zipCode: "",
+          country: "Sri Lanka",
+          phone: ""
+        });
+        
+        toast({
+          title: "Success!",
+          description: "Your address has been saved successfully.",
+        });
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to save address. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Failed to save address:', error);
+      toast({
+        title: "Error",
+        description: "Network error. Please check your connection and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingAddress(false);
+    }
+  };
+
+  const handleEditAddress = () => {
+    if (user?.address) {
+      setAddressForm(user.address);
+    }
+    setShowAddressForm(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-cream">
       <Navigation />
@@ -154,7 +255,7 @@ export default function Profile() {
             <div className="flex items-center gap-6">
               <Avatar className="h-20 w-20">
                 <AvatarImage src="" />
-                <AvatarFallback className="bg-gradient-coffee text-white text-xl">
+                <AvatarFallback className="bg-[#B37142] text-white text-xl">
                   {user.name.split(' ').map(n => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
@@ -186,7 +287,7 @@ export default function Profile() {
           
           <Card className="shadow-warm">
             <CardContent className="p-6 text-center">
-              <Crown className="w-8 h-8 mx-auto mb-2 text-primary" />
+              <Smile className="w-8 h-8 mx-auto mb-2 text-primary" />
               <div className="text-2xl font-bold text-primary">{loyaltyPoints}</div>
               <div className="text-sm text-muted-foreground">Loyalty Points</div>
             </CardContent>
@@ -273,11 +374,138 @@ export default function Profile() {
                 <CardDescription>Manage your delivery addresses</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8">
-                  <MapPin className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-muted-foreground">No saved addresses</p>
-                  <p className="text-sm text-muted-foreground">Add addresses during checkout</p>
-                </div>
+                {user.address ? (
+                  <div className="space-y-4">
+                    <div className="p-4 border rounded-lg bg-muted/30">
+                      <div className="flex justify-between items-start mb-3">
+                        <h4 className="font-medium text-lg">Default Address</h4>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={handleEditAddress}
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Edit
+                        </Button>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2">
+                          <MapPin className="w-5 h-5 text-primary mt-0.5" />
+                          <div>
+                            <p className="font-medium">{user.address.street}</p>
+                            <p className="text-muted-foreground">
+                              {user.address.city}, {user.address.province} {user.address.zipCode}
+                            </p>
+                            <p className="text-muted-foreground">{user.address.country}</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Phone: {user.address.phone}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <Button 
+                        variant="outline"
+                        onClick={() => setShowAddressForm(true)}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Another Address
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <MapPin className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-muted-foreground">No saved addresses</p>
+                    <p className="text-sm text-muted-foreground mb-4">Add your first address to get started</p>
+                    <Button 
+                      variant="outline"
+                      onClick={() => setShowAddressForm(true)}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Address
+                    </Button>
+                  </div>
+                )}
+
+                {showAddressForm && (
+                  <div className="mt-6 p-4 border rounded-lg bg-muted/20">
+                    <h4 className="font-medium mb-4">Address Information</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="street">Street Address</Label>
+                        <Input
+                          id="street"
+                          name="street"
+                          value={addressForm.street}
+                          onChange={handleAddressInputChange}
+                          placeholder="Enter street address"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="city">City</Label>
+                          <Input
+                            id="city"
+                            name="city"
+                            value={addressForm.city}
+                            onChange={handleAddressInputChange}
+                            placeholder="Enter city"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="province">State</Label>
+                          <Input
+                            id="province"
+                            name="province"
+                            value={addressForm.province}
+                            onChange={handleAddressInputChange}
+                            placeholder="Enter province"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="zipCode">Postal Code</Label>
+                          <Input
+                            id="zipCode"
+                            name="zipCode"
+                            value={addressForm.zipCode}
+                            onChange={handleAddressInputChange}
+                            placeholder="Enter postal code"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="phone">Phone Number</Label>
+                          <Input
+                            id="phone"
+                            name="phone"
+                            value={addressForm.phone}
+                            onChange={handleAddressInputChange}
+                            placeholder="Enter phone number"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={handleSaveAddress}
+                          disabled={savingAddress}
+                        >
+                          {savingAddress ? "Saving..." : "Save Address"}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setShowAddressForm(false)}
+                          disabled={savingAddress}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -299,10 +527,123 @@ export default function Profile() {
                     <Input id="email" value={user.email} readOnly />
                   </div>
                 </div>
+                
                 <div>
-                  <Label htmlFor="role">Account Type</Label>
-                  <Input id="role" value={user.role.charAt(0).toUpperCase() + user.role.slice(1)} readOnly />
+                  <Label>User Address</Label>
+                  {user.address ? (
+                    <div className="space-y-3">
+                      <div className="p-4 border rounded-lg bg-muted/30">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-medium">Current Address</h4>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={handleEditAddress}
+                          >
+                            <Edit className="w-4 h-4 mr-1" />
+                            Edit
+                          </Button>
+                        </div>
+                        <div className="text-sm space-y-1">
+                          <p>{user.address.street}</p>
+                          <p>{user.address.city}, {user.address.province} {user.address.zipCode}</p>
+                          <p>{user.address.country}</p>
+                          <p className="text-muted-foreground">Phone: {user.address.phone}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 border-2 border-dashed border-muted-foreground/25 rounded-lg">
+                      <MapPin className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-muted-foreground mb-3">No address saved</p>
+                      <Button 
+                        variant="outline"
+                        onClick={() => setShowAddressForm(true)}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Address
+                      </Button>
+                    </div>
+                  )}
                 </div>
+
+                {showAddressForm && (
+                  <div className="p-4 border rounded-lg bg-muted/20">
+                    <h4 className="font-medium mb-4">Address Information</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="street">Street Address</Label>
+                        <Input
+                          id="street"
+                          name="street"
+                          value={addressForm.street}
+                          onChange={handleAddressInputChange}
+                          placeholder="Enter street address"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="city">City</Label>
+                          <Input
+                            id="city"
+                            name="city"
+                            value={addressForm.city}
+                            onChange={handleAddressInputChange}
+                            placeholder="Enter city"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="province">State</Label>
+                          <Input
+                            id="province"
+                            name="province"
+                            value={addressForm.province}
+                            onChange={handleAddressInputChange}
+                            placeholder="Enter province"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="zipCode">Postal Code</Label>
+                          <Input
+                            id="zipCode"
+                            name="zipCode"
+                            value={addressForm.zipCode}
+                            onChange={handleAddressInputChange}
+                            placeholder="Enter postal code"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="phone">Phone Number</Label>
+                          <Input
+                            id="phone"
+                            name="phone"
+                            value={addressForm.phone}
+                            onChange={handleAddressInputChange}
+                            placeholder="Enter phone number"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={handleSaveAddress}
+                          disabled={savingAddress}
+                        >
+                          {savingAddress ? "Saving..." : "Save Address"}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setShowAddressForm(false)}
+                          disabled={savingAddress}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <Separator />
                 <div className="flex justify-end">
                   <Button variant="outline">

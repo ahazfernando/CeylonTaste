@@ -13,6 +13,14 @@ const userSchema = new mongoose.Schema(
 			default: "active",
 			index: true 
 		},
+		address: {
+			street: { type: String, trim: true },
+			city: { type: String, trim: true },
+			province: { type: String, trim: true },
+			zipCode: { type: String, trim: true },
+			country: { type: String, trim: true, default: "Sri Lanka" },
+			phone: { type: String, trim: true }
+		},
 	},
 	{ timestamps: true }
 );
@@ -25,6 +33,7 @@ userSchema.methods.toSafeJSON = function () {
 		role: this.role,
 		phone: this.phone,
 		customerStatus: this.customerStatus,
+		address: this.address,
 		createdAt: this.createdAt,
 		updatedAt: this.updatedAt,
 	};

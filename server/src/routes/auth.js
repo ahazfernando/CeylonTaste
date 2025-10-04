@@ -67,7 +67,52 @@ router.post("/logout", async (_req, res) => {
 router.get("/me", requireAuth, async (req, res) => {
 	const user = await User.findById(req.user.id).lean();
 	if (!user) return res.status(401).json({ error: "Unauthorized" });
-	res.json({ user: { id: user._id.toString(), email: user.email, name: user.name, role: user.role } });
+	res.json({ 
+		user: { 
+			id: user._id.toString(), 
+			email: user.email, 
+			name: user.name, 
+			role: user.role,
+			address: user.address,
+			createdAt: user.createdAt
+		} 
+	});
+});
+
+// PUT /api/auth/profile - Update user profile
+router.put("/profile", requireAuth, async (req, res) => {
+	try {
+		const { address } = req.body;
+		
+		const updateData = {};
+		if (address) {
+			updateData.address = address;
+		}
+		
+		const user = await User.findByIdAndUpdate(
+			req.user.id,
+			updateData,
+			{ new: true, projection: { passwordHash: 0 } }
+		);
+		
+		if (!user) {
+			return res.status(404).json({ error: "User not found" });
+		}
+		
+		res.json({ 
+			user: { 
+				id: user._id.toString(), 
+				email: user.email, 
+				name: user.name, 
+				role: user.role,
+				address: user.address,
+				createdAt: user.createdAt
+			} 
+		});
+	} catch (error) {
+		console.error('Error updating profile:', error);
+		res.status(500).json({ error: 'Failed to update profile' });
+	}
 });
 
 export default router;

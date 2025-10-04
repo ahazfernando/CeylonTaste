@@ -20,7 +20,6 @@ export function HeroSection() {
       <div className="container relative z-10 mx-auto px-4">
         <div className="max-w-2xl text-white">
           <Badge className="mb-4 bg-white/10 text-[#EFE2D1] border border-white/20 backdrop-blur-md p-3 shadow-lg">
-            <Crown className="w-4 h-4 mr-1" />
             Royal Ceylon Heritage
           </Badge>
           

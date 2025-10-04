@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, CreditCard, MapPin, User, Phone, Mail } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
+import { SuccessModal } from "@/components/ui/success-modal";
 
 export default function Checkout() {
   const router = useRouter();
@@ -20,6 +21,8 @@ export default function Checkout() {
   const [currentUser, setCurrentUser] = useState<null | { id: string; role: string; name?: string; email?: string }>(null);
   const [loading, setLoading] = useState(true);
   const [orderLoading, setOrderLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [orderNumber, setOrderNumber] = useState("");
 
   // Form state
   const [formData, setFormData] = useState({
@@ -57,7 +60,11 @@ export default function Checkout() {
             setFormData(prev => ({
               ...prev,
               fullName: data.user.name || "",
-              email: data.user.email || ""
+              email: data.user.email || "",
+              phone: data.user.address?.phone || "",
+              address: data.user.address?.street || "",
+              city: data.user.address?.city || "",
+              postalCode: data.user.address?.zipCode || ""
             }));
           }
           setLoading(false);
@@ -112,9 +119,12 @@ export default function Checkout() {
         shippingAddress: {
           street: formData.address,
           city: formData.city,
-          state: formData.city, // Using city as state for now
+          province: formData.city, // Using city as province for now
           zipCode: formData.postalCode,
-          country: "Sri Lanka"
+          country: "Sri Lanka",
+          phone: formData.phone,
+          fullName: formData.fullName,
+          email: formData.email
         },
         paymentMethod: formData.paymentMethod,
         notes: `Payment method: ${formData.paymentMethod}`
@@ -157,15 +167,25 @@ export default function Checkout() {
       // Clear cart after successful order
       clearCart();
       
-      // Redirect to success page or show success message
-      alert(`Order placed successfully! Order number: ${result.order.orderNumber}`);
-      router.push('/profile');
+      // Show success modal
+      setOrderNumber(result.order.orderNumber);
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Order placement failed:', error);
       alert(`Failed to place order: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setOrderLoading(false);
     }
+  };
+
+  const handleContinueShopping = () => {
+    setShowSuccessModal(false);
+    router.push('/');
+  };
+
+  const handleViewProfile = () => {
+    setShowSuccessModal(false);
+    router.push('/profile');
   };
 
   if (loading) {
@@ -435,6 +455,15 @@ export default function Checkout() {
           </div>
         </div>
       </main>
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        orderNumber={orderNumber}
+        total={total}
+        onContinueShopping={handleContinueShopping}
+      />
     </div>
   );
 }

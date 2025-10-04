@@ -15,7 +15,7 @@ interface NavigationProps {
 }
 
 export function Navigation({ cartItemCount }: NavigationProps) {
-  const { getTotalItems } = useCart();
+  const { getTotalItems, clearCart } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<null | { id: string; role: string; name?: string; email?: string }>(null);
   
@@ -45,6 +45,7 @@ export function Navigation({ cartItemCount }: NavigationProps) {
     } finally {
       try { localStorage.removeItem('tt_token'); } catch {}
       setCurrentUser(null);
+      clearCart(); // Clear cart on logout
       setIsMenuOpen(false);
     }
   }
@@ -121,7 +122,7 @@ export function Navigation({ cartItemCount }: NavigationProps) {
               <Link href="/cart">
                 <ShoppingCart className="h-5 w-5" />
                 {actualCartCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-amber-600 text-white">
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-amber-600 text-white flex items-center justify-center">
                     {actualCartCount}
                   </Badge>
                 )}
@@ -219,7 +220,7 @@ export function Navigation({ cartItemCount }: NavigationProps) {
                   <Link href="/cart">
                     <ShoppingCart className="h-5 w-5" />
                     {actualCartCount > 0 && (
-                      <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-amber-600 text-white">
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-amber-600 text-white flex items-center justify-center">
                         {actualCartCount}
                       </Badge>
                     )}

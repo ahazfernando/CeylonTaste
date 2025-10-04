@@ -31,6 +31,16 @@ interface Order {
   total: number;
   status: string;
   createdAt: string;
+  shippingAddress?: {
+    street: string;
+    city: string;
+    province: string;
+    zipCode: string;
+    country: string;
+    phone: string;
+    fullName: string;
+    email: string;
+  };
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -185,12 +195,25 @@ export default function AdminOrdersPage() {
               <CardHeader><CardTitle className="text-foreground">Order Management</CardTitle><CardDescription className="text-muted-foreground">View and manage all customer orders</CardDescription></CardHeader>
               <CardContent>
                 <Table>
-                  <TableHeader><TableRow className="border-border"><TableHead className="text-foreground">Order ID</TableHead><TableHead className="text-foreground">Customer</TableHead><TableHead className="text-foreground">Items</TableHead><TableHead className="text-foreground">Total</TableHead><TableHead className="text-foreground">Status</TableHead><TableHead className="text-foreground">Date & Time</TableHead><TableHead className="text-foreground">Actions</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow className="border-border"><TableHead className="text-foreground">Order ID</TableHead><TableHead className="text-foreground">Customer</TableHead><TableHead className="text-foreground">Shipping Address</TableHead><TableHead className="text-foreground">Items</TableHead><TableHead className="text-foreground">Total</TableHead><TableHead className="text-foreground">Status</TableHead><TableHead className="text-foreground">Date & Time</TableHead><TableHead className="text-foreground">Actions</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {filteredOrders.map((order) => (
                       <TableRow key={order._id} className="border-border">
                         <TableCell className="font-medium text-foreground">{order.orderNumber}</TableCell>
                         <TableCell className="text-foreground">{order.user.name}</TableCell>
+                        <TableCell className="text-muted-foreground max-w-xs">
+                          {order.shippingAddress ? (
+                            <div className="space-y-1">
+                              <div className="font-medium">{order.shippingAddress.fullName}</div>
+                              <div className="text-xs">{order.shippingAddress.street}</div>
+                              <div className="text-xs">{order.shippingAddress.city}, {order.shippingAddress.province}</div>
+                              <div className="text-xs">{order.shippingAddress.zipCode}</div>
+                              <div className="text-xs">{order.shippingAddress.phone}</div>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">No address</span>
+                          )}
+                        </TableCell>
                         <TableCell className="text-muted-foreground max-w-xs truncate">{getItemsString(order.items)}</TableCell>
                         <TableCell className="font-medium text-foreground">LKR {order.total.toFixed(2)}</TableCell>
                         <TableCell><StatusBadge status={order.status} /></TableCell>

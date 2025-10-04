@@ -19,33 +19,88 @@ interface CartContextType {
   clearCart: () => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
+  isLoggedIn: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Load cart from localStorage on mount
+  // Immediate cart clearing on mount if not logged in
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedCart = localStorage.getItem('truetaste_cart');
-      if (savedCart) {
-        try {
-          setCartItems(JSON.parse(savedCart));
-        } catch (error) {
-          console.error('Failed to load cart from localStorage:', error);
-        }
+      const token = localStorage.getItem('tt_token');
+      if (!token) {
+        // Clear cart immediately if no token
+        setCartItems([]);
+        localStorage.removeItem('truetaste_cart');
+        console.log('Cart cleared - no auth token found');
       }
     }
   }, []);
 
-  // Save cart to localStorage whenever cartItems changes
+  // Check if user is logged in
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    const checkAuthStatus = () => {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
+      const isAuthenticated = !!token;
+      setIsLoggedIn(isAuthenticated);
+      
+      // Clear cart if user is not logged in
+      if (!isAuthenticated) {
+        setCartItems([]);
+        // Also clear from localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('truetaste_cart');
+        }
+      }
+    };
+
+    checkAuthStatus();
+    
+    // Listen for storage changes (login/logout)
+    const handleStorageChange = () => {
+      checkAuthStatus();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  // Load cart from localStorage on mount (only if logged in)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && isLoggedIn) {
+      const savedCart = localStorage.getItem('truetaste_cart');
+      if (savedCart) {
+        try {
+          const parsedCart = JSON.parse(savedCart);
+          console.log('Loading cart from localStorage:', parsedCart);
+          setCartItems(parsedCart);
+        } catch (error) {
+          console.error('Failed to load cart from localStorage:', error);
+          setCartItems([]);
+        }
+      } else {
+        console.log('No saved cart found in localStorage');
+        setCartItems([]);
+      }
+    } else if (typeof window !== 'undefined' && !isLoggedIn) {
+      console.log('User not logged in, keeping cart empty');
+      setCartItems([]);
+    }
+  }, [isLoggedIn]);
+
+  // Save cart to localStorage whenever cartItems changes (only if logged in)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && isLoggedIn) {
       localStorage.setItem('truetaste_cart', JSON.stringify(cartItems));
     }
-  }, [cartItems]);
+  }, [cartItems, isLoggedIn]);
 
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
     setCartItems(prevItems => {
@@ -84,6 +139,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => {
     setCartItems([]);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('truetaste_cart');
+    }
   };
 
   const getTotalItems = () => {
@@ -102,6 +160,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     clearCart,
     getTotalItems,
     getTotalPrice,
+    isLoggedIn,
   };
 
   return (

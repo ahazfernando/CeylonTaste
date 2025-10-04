@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Search, Eye, Mail, Phone, Users, MoreHorizontal, Edit, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { CustomerDetailsModal } from "@/components/ui/customer-details-modal";
 
 interface Customer {
   _id: string;
@@ -18,6 +19,14 @@ interface Customer {
   email: string;
   phone?: string;
   customerStatus?: string;
+  address?: {
+    street: string;
+    city: string;
+    province: string;
+    zipCode: string;
+    country: string;
+    phone: string;
+  };
   totalOrders: number;
   totalSpent: number;
   lastOrder?: string;
@@ -50,6 +59,8 @@ export default function AdminCustomersPage() {
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [phoneValue, setPhoneValue] = useState("");
   const [updatingPhone, setUpdatingPhone] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [showCustomerModal, setShowCustomerModal] = useState(false);
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -160,6 +171,28 @@ export default function AdminCustomersPage() {
   const openEditDialog = (customer: Customer) => {
     setEditingCustomer(customer);
     setPhoneValue(customer.phone || "");
+  };
+
+  const handleViewDetails = async (customer: Customer) => {
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
+      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      const response = await fetch(`http://localhost:4000/api/admin/customers/${customer._id}`, { 
+        credentials: "include", 
+        headers 
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedCustomer(data.customer);
+        setShowCustomerModal(true);
+      } else {
+        console.error('Failed to fetch customer details');
+      }
+    } catch (error) {
+      console.error('Error fetching customer details:', error);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -324,7 +357,7 @@ export default function AdminCustomersPage() {
                           <Edit className="h-4 w-4 mr-2" />
                           Edit Phone
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleViewDetails(customer)}>
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
@@ -386,6 +419,13 @@ export default function AdminCustomersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Customer Details Modal */}
+      <CustomerDetailsModal
+        isOpen={showCustomerModal}
+        onClose={() => setShowCustomerModal(false)}
+        customer={selectedCustomer}
+      />
     </main>
   );
 }

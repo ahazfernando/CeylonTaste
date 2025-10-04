@@ -68,6 +68,38 @@ router.get("/customers", requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
+// Get individual customer details (admin only)
+router.get("/customers/:id", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const customer = await User.findById(id, { passwordHash: 0 }).lean();
+    if (!customer) {
+      return res.status(404).json({ error: 'Customer not found' });
+    }
+
+    // Get order statistics for the customer
+    const orders = await Order.find({ user: id });
+    const totalOrders = orders.length;
+    const totalSpent = orders.reduce((sum, order) => sum + order.total, 0);
+    const lastOrder = orders.length > 0 
+      ? orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0].createdAt
+      : null;
+
+    const customerWithStats = {
+      ...customer,
+      totalOrders,
+      totalSpent,
+      lastOrder
+    };
+
+    res.json({ customer: customerWithStats });
+  } catch (error) {
+    console.error('Error fetching customer details:', error);
+    res.status(500).json({ error: 'Failed to fetch customer details' });
+  }
+});
+
 // Update customer status (admin only)
 router.patch("/customers/:id/status", requireAuth, requireAdmin, async (req, res) => {
   try {
