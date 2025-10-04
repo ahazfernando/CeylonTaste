@@ -76,7 +76,9 @@ router.post('/', requireAuth, validateOrder, async (req, res) => {
     }
 
     // Create order
+    const orderNumber = await Order.generateOrderNumber();
     const order = new Order({
+      orderNumber,
       user: req.user.id,
       items: items.map(item => ({
         product: item.product,

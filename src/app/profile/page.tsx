@@ -162,16 +162,8 @@ export default function Profile() {
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <h1 className="text-2xl font-bold">{user.name}</h1>
-                  <Badge className="bg-gradient-royal text-white">
-                    <Crown className="w-3 h-3 mr-1" />
-                    Royal Member
-                  </Badge>
                 </div>
                 <p className="text-muted-foreground mb-3">{user.email}</p>
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <Calendar className="w-4 h-4" />
-                  Member since {memberSince}
-                </div>
               </div>
               
               <Button variant="outline">

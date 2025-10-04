@@ -84,19 +84,28 @@ orderSchema.index({ user: 1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ createdAt: -1 });
 
-// Generate order number before saving
-orderSchema.pre('save', async function(next) {
-  if (!this.orderNumber) {
-    try {
-      const count = await mongoose.models.Order.countDocuments();
-      this.orderNumber = `ORD-${String(count + 1).padStart(3, '0')}`;
-    } catch (error) {
-      console.error('Error generating order number:', error);
-      this.orderNumber = `ORD-${Date.now()}`;
+// Generate unique order number
+orderSchema.statics.generateOrderNumber = async function() {
+  let orderNumber;
+  let attempts = 0;
+  const maxAttempts = 10;
+  
+  do {
+    const count = await this.countDocuments();
+    orderNumber = `ORD-${String(count + 1).padStart(3, '0')}`;
+    
+    // Check if this order number already exists
+    const existingOrder = await this.findOne({ orderNumber });
+    if (!existingOrder) {
+      return orderNumber;
     }
-  }
-  next();
-});
+    
+    attempts++;
+  } while (attempts < maxAttempts);
+  
+  // Fallback to timestamp-based number if we can't find a unique sequential number
+  return `ORD-${Date.now()}`;
+};
 
 // Clear existing model if it exists to avoid conflicts
 if (mongoose.models.Order) {
