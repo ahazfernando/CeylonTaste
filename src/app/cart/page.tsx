@@ -61,7 +61,7 @@ export default function Cart() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-cream">
+    <div className="min-h-screen bg-white">
       <Navigation />
       <main className="container py-8">
         {/* Header */}

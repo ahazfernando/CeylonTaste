@@ -21,6 +21,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { RevenueChart } from "@/components/charts/revenue-chart";
+import { TopProductsChart } from "@/components/charts/top-products-chart";
+import { CustomerGrowthChart } from "@/components/charts/customer-growth-chart";
 
 interface DashboardStats {
   totalRevenue: number;
@@ -176,7 +179,6 @@ export default function AdminDashboard() {
                     +{stats.revenueGrowth}%
                   </div>
                 </div>
-                <DollarSign className="w-8 h-8 text-accent" />
               </div>
             </CardContent>
           </Card>
@@ -340,22 +342,16 @@ export default function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="analytics">
-            <Card className="shadow-warm">
-              <CardHeader>
-                <CardTitle>Sales Analytics</CardTitle>
-                <CardDescription>Business performance insights and trends</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12 text-muted-foreground">
-                  <BarChart className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <h3 className="text-lg font-semibold mb-2">Analytics Dashboard</h3>
-                  <p className="max-w-md mx-auto">
-                    Connect to Supabase to unlock detailed analytics including sales trends, 
-                    customer insights, and performance metrics.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {/* Revenue Chart */}
+              <RevenueChart />
+              
+              {/* Charts Grid */}
+              <div className="grid lg:grid-cols-2 gap-6">
+                <TopProductsChart />
+                <CustomerGrowthChart />
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </main>

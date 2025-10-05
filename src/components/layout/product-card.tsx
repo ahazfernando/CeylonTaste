@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, ShoppingCart, Heart } from "lucide-react";
+import { ShoppingCart, Heart } from "lucide-react";
 import { cn, getImageUrl } from "@/lib/utils";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "@/hooks/use-toast";
@@ -111,7 +111,7 @@ export function ProductCard({
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-2">
           {isNewProduct && (
-            <Badge className="bg-accent text-accent-foreground">
+            <Badge className="bg-white text-amber-800 shadow-lg">
               New
             </Badge>
           )}
@@ -121,7 +121,7 @@ export function ProductCard({
             </Badge>
           )}
           {isFeatured && (
-            <Badge className="bg-gradient-coffee text-white">
+            <Badge className="bg-amber-800 text-white">
               Featured
             </Badge>
           )}
@@ -147,27 +147,7 @@ export function ProductCard({
 
       <CardContent className="p-4">
         <h3 className="font-semibold text-lg mb-2 line-clamp-1">{name}</h3>
-        <p className="text-muted-foreground text-sm mb-3 line-clamp-2">{description}</p>
-        
-        {/* Rating */}
-        <div className="flex items-center gap-1 mb-3">
-          <div className="flex">
-            {[...Array(5)].map((_, i) => (
-              <Star 
-                key={i} 
-                className={cn(
-                  "h-4 w-4",
-                  i < Math.floor(rating) 
-                    ? "text-accent fill-accent" 
-                    : "text-muted-foreground"
-                )}
-              />
-            ))}
-          </div>
-          <span className="text-sm text-muted-foreground">
-            {rating} ({reviewCount})
-          </span>
-        </div>
+        <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{description}</p>
 
         {/* Price */}
         <div className="flex items-center gap-2">

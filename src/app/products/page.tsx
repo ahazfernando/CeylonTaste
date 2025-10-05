@@ -46,7 +46,7 @@ export default function Products() {
       <main className="container py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-coffee bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold mb-4 text-primary">
             Our Products
           </h1>
           <p className="text-muted-foreground max-w-2xl">

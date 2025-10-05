@@ -27,42 +27,60 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Immediate cart clearing on mount if not logged in
+  // Initialize auth status and cart on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('tt_token');
-      if (!token) {
-        // Clear cart immediately if no token
+      const isAuthenticated = !!token;
+      
+      setIsLoggedIn(isAuthenticated);
+      
+      if (isAuthenticated) {
+        // Load cart only if user is authenticated
+        const savedCart = localStorage.getItem('truetaste_cart');
+        if (savedCart) {
+          try {
+            const parsedCart = JSON.parse(savedCart);
+            console.log('Loading cart from localStorage:', parsedCart);
+            setCartItems(parsedCart);
+          } catch (error) {
+            console.error('Failed to load cart from localStorage:', error);
+            setCartItems([]);
+            localStorage.removeItem('truetaste_cart');
+          }
+        } else {
+          console.log('No saved cart found in localStorage');
+          setCartItems([]);
+        }
+      } else {
+        // Clear cart immediately if not authenticated
+        console.log('User not authenticated, clearing cart');
         setCartItems([]);
         localStorage.removeItem('truetaste_cart');
-        console.log('Cart cleared - no auth token found');
       }
+      
+      setIsInitialized(true);
     }
   }, []);
 
-  // Check if user is logged in
+  // Listen for storage changes (login/logout)
   useEffect(() => {
-    const checkAuthStatus = () => {
+    if (!isInitialized) return;
+    
+    const handleStorageChange = () => {
       const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
       const isAuthenticated = !!token;
+      
       setIsLoggedIn(isAuthenticated);
       
-      // Clear cart if user is not logged in
       if (!isAuthenticated) {
+        // Clear cart on logout
         setCartItems([]);
-        // Also clear from localStorage
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('truetaste_cart');
-        }
+        localStorage.removeItem('truetaste_cart');
+        console.log('Cart cleared due to logout');
       }
-    };
-
-    checkAuthStatus();
-    
-    // Listen for storage changes (login/logout)
-    const handleStorageChange = () => {
-      checkAuthStatus();
     };
     
     window.addEventListener('storage', handleStorageChange);
@@ -70,30 +88,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
-
-  // Load cart from localStorage on mount (only if logged in)
-  useEffect(() => {
-    if (typeof window !== 'undefined' && isLoggedIn) {
-      const savedCart = localStorage.getItem('truetaste_cart');
-      if (savedCart) {
-        try {
-          const parsedCart = JSON.parse(savedCart);
-          console.log('Loading cart from localStorage:', parsedCart);
-          setCartItems(parsedCart);
-        } catch (error) {
-          console.error('Failed to load cart from localStorage:', error);
-          setCartItems([]);
-        }
-      } else {
-        console.log('No saved cart found in localStorage');
-        setCartItems([]);
-      }
-    } else if (typeof window !== 'undefined' && !isLoggedIn) {
-      console.log('User not logged in, keeping cart empty');
-      setCartItems([]);
-    }
-  }, [isLoggedIn]);
+  }, [isInitialized]);
 
   // Save cart to localStorage whenever cartItems changes (only if logged in)
   useEffect(() => {
@@ -141,8 +136,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCartItems([]);
     if (typeof window !== 'undefined') {
       localStorage.removeItem('truetaste_cart');
+      console.log('Cart cleared manually');
     }
   };
+
+  // Debug function to clear all cart-related data
+  const debugClearAllCartData = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('truetaste_cart');
+      localStorage.removeItem('tt_token');
+      setCartItems([]);
+      setIsLoggedIn(false);
+      console.log('All cart and auth data cleared for debugging');
+    }
+  };
+
+  // Expose debug function in development
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    (window as any).debugClearCart = debugClearAllCartData;
+  }
 
   const getTotalItems = () => {
     return cartItems.reduce((total, item) => total + item.quantity, 0);

@@ -234,6 +234,140 @@ router.get("/dashboard/stats", requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
+// Analytics endpoints for charts
+router.get("/analytics/revenue", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { period = '6m' } = req.query;
+    
+    let monthsBack = 6;
+    if (period === '12m') monthsBack = 12;
+    else if (period === '3m') monthsBack = 3;
+    
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - monthsBack);
+    
+    // Get monthly revenue data
+    const revenueData = await Order.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate },
+          status: { $in: ['delivered', 'shipped'] }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' }
+          },
+          revenue: { $sum: '$total' }
+        }
+      },
+      {
+        $sort: { '_id.year': 1, '_id.month': 1 }
+      }
+    ]);
+    
+    // Format data for charts
+    const chartData = revenueData.map(item => ({
+      month: new Date(item._id.year, item._id.month - 1).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+      revenue: Math.round(item.revenue * 100) / 100
+    }));
+    
+    res.json({ data: chartData });
+  } catch (error) {
+    console.error('Error fetching revenue analytics:', error);
+    res.status(500).json({ error: 'Failed to fetch revenue analytics' });
+  }
+});
+
+router.get("/analytics/top-products", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { limit = 5 } = req.query;
+    
+    // Get top selling products
+    const topProducts = await Order.aggregate([
+      { $unwind: '$items' },
+      {
+        $group: {
+          _id: '$items.product',
+          totalSold: { $sum: '$items.quantity' },
+          totalRevenue: { $sum: { $multiply: ['$items.quantity', '$items.price'] } }
+        }
+      },
+      {
+        $lookup: {
+          from: 'products',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'product'
+        }
+      },
+      { $unwind: '$product' },
+      {
+        $project: {
+          name: '$product.name',
+          totalSold: 1,
+          totalRevenue: 1
+        }
+      },
+      { $sort: { totalSold: -1 } },
+      { $limit: parseInt(limit) }
+    ]);
+    
+    res.json({ data: topProducts });
+  } catch (error) {
+    console.error('Error fetching top products analytics:', error);
+    res.status(500).json({ error: 'Failed to fetch top products analytics' });
+  }
+});
+
+router.get("/analytics/customers", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { period = '6m' } = req.query;
+    
+    let monthsBack = 6;
+    if (period === '12m') monthsBack = 12;
+    else if (period === '3m') monthsBack = 3;
+    
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - monthsBack);
+    
+    // Get monthly customer registrations
+    const customerData = await User.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate },
+          role: 'user'
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' }
+          },
+          customers: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { '_id.year': 1, '_id.month': 1 }
+      }
+    ]);
+    
+    // Format data for charts
+    const chartData = customerData.map(item => ({
+      month: new Date(item._id.year, item._id.month - 1).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+      customers: item.customers
+    }));
+    
+    res.json({ data: chartData });
+  } catch (error) {
+    console.error('Error fetching customer analytics:', error);
+    res.status(500).json({ error: 'Failed to fetch customer analytics' });
+  }
+});
+
 export default router;
 
 
