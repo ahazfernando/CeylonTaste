@@ -93,7 +93,7 @@ export function SuccessModal({
           <div className="flex flex-col sm:flex-row gap-3">
             <Button 
               onClick={onContinueShopping}
-              className="flex-1 bg-gradient-coffee text-white hover:opacity-90"
+              className="flex-1 bg-[#B37142] text-white hover:from-orange-600 hover:to-orange-700 focus:ring-1 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 shadow-lg"
             >
               Continue Shopping
             </Button>

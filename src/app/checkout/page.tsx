@@ -214,7 +214,7 @@ export default function Checkout() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold bg-gradient-coffee bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-[#B37142]">
             Checkout
           </h1>
           <Badge className="bg-accent/20 text-accent-foreground">
@@ -444,7 +444,7 @@ export default function Checkout() {
               
               <CardFooter>
                 <Button 
-                  className="w-full bg-gradient-coffee text-white hover:opacity-90 shadow-warm"
+                  className="w-full bg-[#B37142] text-white hover:from-orange-600 hover:to-orange-700 focus:ring-1 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 shadow-lg"
                   onClick={handlePlaceOrder}
                   disabled={orderLoading}
                 >
