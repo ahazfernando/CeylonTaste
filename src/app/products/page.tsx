@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { Navigation } from "@/components/ui/navigation";
 import { ProductCard } from "@/components/layout/product-card";
 import { Button } from "@/components/ui/button";
@@ -12,26 +13,42 @@ import { productService, Product } from "@/lib/products";
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState("featured");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Load products on component mount
+  // Load products and categories on component mount
   useEffect(() => {
-    const loadProducts = async () => {
+    const loadData = async () => {
       try {
-        const productsData = await productService.getAllProducts();
+        setLoading(true);
+        console.log('Loading products and categories...');
+        
+        // Load products and categories in parallel
+        const [productsData, categoriesData] = await Promise.all([
+          productService.getAllProducts(),
+          productService.getCategories()
+        ]);
+        
+        console.log('Products loaded:', productsData);
+        console.log('Categories loaded:', categoriesData);
+        console.log('Categories length:', categoriesData.length);
+        
         setProducts(productsData);
+        setCategories(["All", ...categoriesData]);
+        
+        console.log('Categories state set to:', ["All", ...categoriesData]);
       } catch (error) {
-        console.error('Failed to load products:', error);
+        console.error('Failed to load data:', error);
+      } finally {
+        setLoading(false);
       }
     };
-    loadProducts();
+    loadData();
   }, []);
-
-  // Get unique categories from products
-  const categories = ["All", ...Array.from(new Set(products.map(p => p.category)))];
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -69,18 +86,18 @@ export default function Products() {
           </div>
 
           {/* Category Filter */}
-          <div className="flex gap-2 flex-wrap">
-            {categories.map((category) => (
-              <Badge
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                className="cursor-pointer hover:bg-accent hover:text-accent-foreground"
-                onClick={() => setSelectedCategory(category)}
-              >
-                {category}
-              </Badge>
-            ))}
-          </div>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory} disabled={loading}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder={loading ? "Loading..." : "Select Category"} />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           {/* Sort */}
           <Select value={sortBy} onValueChange={setSortBy}>

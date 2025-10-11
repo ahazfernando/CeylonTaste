@@ -11,7 +11,7 @@ export interface Product {
   isNewProduct?: boolean;
   isFeatured?: boolean;
   image: string;
-  stock?: number;
+  availability?: 'Available' | 'Unavailable' | 'In House Only' | 'Breakfast' | 'Lunch' | 'Dinner';
   status?: 'active' | 'inactive';
 }
 
@@ -143,12 +143,13 @@ export const productService = {
     }
   },
 
-  // Get all categories
+  // Get all categories from the categories collection
   getCategories: async (): Promise<string[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/products/categories/list`);
+      const response = await fetch(`${API_BASE_URL}/categories`);
       if (!response.ok) throw new Error('Failed to fetch categories');
-      return await response.json();
+      const data = await response.json();
+      return data.categories.map((cat: any) => cat.name);
     } catch (error) {
       console.error('Error fetching categories:', error);
       return [];

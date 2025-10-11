@@ -40,10 +40,10 @@ const productSchema = new mongoose.Schema({
     type: String,
     default: '/placeholder.svg'
   },
-  stock: {
-    type: Number,
-    default: 0,
-    min: 0
+  availability: {
+    type: String,
+    enum: ['Available', 'Unavailable', 'In House Only', 'Breakfast', 'Lunch', 'Dinner'],
+    default: 'Available'
   },
   status: {
     type: String,

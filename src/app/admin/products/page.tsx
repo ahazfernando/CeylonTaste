@@ -36,7 +36,7 @@ const Products = () => {
     name: "",
     description: "",
     price: "",
-    stock: "",
+    availability: "Available",
     category: "",
     image: "",
     isNewProduct: false,
@@ -82,7 +82,7 @@ const Products = () => {
       name: "",
       description: "",
       price: "",
-      stock: "",
+      availability: "Available",
       category: "",
       image: "",
       isNewProduct: false,
@@ -153,10 +153,23 @@ const Products = () => {
     setCurrentPage(1);
   }, [searchTerm, selectedCategory, sortBy]);
 
-  const getStockBadge = (stock: number) => {
-    if (stock === 0) return <Badge variant="destructive">Out of Stock</Badge>;
-    if (stock < 10) return <Badge className="bg-warning text-warning-foreground">Low Stock</Badge>;
-    return <Badge className="bg-success text-success-foreground">In Stock</Badge>;
+  const getAvailabilityBadge = (availability: string) => {
+    switch (availability) {
+      case 'Available':
+        return <Badge className="bg-green-500 text-white">Available</Badge>;
+      case 'Unavailable':
+        return <Badge variant="destructive">Unavailable</Badge>;
+      case 'In House Only':
+        return <Badge className="bg-orange-500 text-white">In House Only</Badge>;
+      case 'Breakfast':
+        return <Badge className="bg-blue-500 text-white">Breakfast</Badge>;
+      case 'Lunch':
+        return <Badge className="bg-purple-500 text-white">Lunch</Badge>;
+      case 'Dinner':
+        return <Badge className="bg-indigo-500 text-white">Dinner</Badge>;
+      default:
+        return <Badge className="bg-gray-500 text-white">Unknown</Badge>;
+    }
   };
 
   // Image upload handlers
@@ -226,7 +239,7 @@ const Products = () => {
         name: formData.name,
         description: formData.description,
         price: parseFloat(formData.price),
-        stock: parseInt(formData.stock) || 0,
+        availability: formData.availability as 'Available' | 'Unavailable' | 'In House Only' | 'Breakfast' | 'Lunch' | 'Dinner',
         category: formData.category,
         image: imageUrl,
         isNewProduct: formData.isNewProduct,
@@ -279,7 +292,7 @@ const Products = () => {
       name: product.name,
       description: product.description,
       price: product.price.toString(),
-      stock: (product.stock || 0).toString(),
+      availability: product.availability || "Available",
       category: product.category,
       image: product.image,
       isNewProduct: product.isNewProduct || false,
@@ -298,7 +311,7 @@ const Products = () => {
       name: product.name,
       description: product.description,
       price: product.price.toString(),
-      stock: (product.stock || 0).toString(),
+      availability: product.availability || "Available",
       category: product.category,
       image: product.image,
       isNewProduct: product.isNewProduct || false,
@@ -484,15 +497,20 @@ const Products = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="stock" className="text-foreground">Stock</Label>
-                  <Input 
-                    id="stock" 
-                    type="number" 
-                    placeholder="0" 
-                    className="border-border"
-                    value={formData.stock}
-                    onChange={(e) => setFormData({...formData, stock: e.target.value})}
-                  />
+                  <Label htmlFor="availability" className="text-foreground">Availability</Label>
+                  <Select value={formData.availability} onValueChange={(value) => setFormData({...formData, availability: value})}>
+                    <SelectTrigger className="border-border">
+                      <SelectValue placeholder="Select availability" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Available">Available</SelectItem>
+                      <SelectItem value="Unavailable">Unavailable</SelectItem>
+                      <SelectItem value="In House Only">In House Only</SelectItem>
+                      <SelectItem value="Breakfast">Breakfast</SelectItem>
+                      <SelectItem value="Lunch">Lunch</SelectItem>
+                      <SelectItem value="Dinner">Dinner</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               
@@ -682,15 +700,20 @@ const Products = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="view-stock" className="text-foreground">Stock</Label>
-                  <Input 
-                    id="view-stock" 
-                    type="number" 
-                    placeholder="0" 
-                    className="border-border"
-                    value={formData.stock}
-                    onChange={(e) => setFormData({...formData, stock: e.target.value})}
-                  />
+                  <Label htmlFor="view-availability" className="text-foreground">Availability</Label>
+                  <Select value={formData.availability} onValueChange={(value) => setFormData({...formData, availability: value})}>
+                    <SelectTrigger className="border-border">
+                      <SelectValue placeholder="Select availability" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Available">Available</SelectItem>
+                      <SelectItem value="Unavailable">Unavailable</SelectItem>
+                      <SelectItem value="In House Only">In House Only</SelectItem>
+                      <SelectItem value="Breakfast">Breakfast</SelectItem>
+                      <SelectItem value="Lunch">Lunch</SelectItem>
+                      <SelectItem value="Dinner">Dinner</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               
@@ -846,10 +869,10 @@ const Products = () => {
               <p className="text-sm text-muted-foreground">{product.description}</p>
               <div className="flex items-center justify-between">
                 <span className="text-2xl font-bold text-foreground">LKR {product.price}</span>
-                {getStockBadge(product.stock || 0)}
+                {getAvailabilityBadge(product.availability || "Available")}
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Stock: {product.stock || 0} units</span>
+                <span className="text-muted-foreground">Availability: {product.availability || "Available"}</span>
                 <Button 
                   variant="outline" 
                   size="sm" 

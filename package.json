@@ -14,7 +14,8 @@
     "dev:server": "nodemon server/server.js",
     "dev:full": "concurrently \"npm run dev\" \"npm run dev:server\"",
     "seed:admin": "node server/scripts/seed-admin.js",
-    "seed:products": "node server/scripts/seed-products.js"
+    "seed:products": "node server/scripts/seed-products.js",
+    "seed:categories": "node server/scripts/seed-categories.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

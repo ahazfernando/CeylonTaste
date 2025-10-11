@@ -289,7 +289,7 @@ export default function Profile() {
                         <div>
                           <div className="font-semibold">{order.orderNumber}</div>
                           <div className="text-sm text-muted-foreground">
-                            {order.items.map(item => `${item.product.name} x${item.quantity}`).join(", ")}
+                            {order.items.map(item => `${item.product?.name || 'Unknown Product'} x${item.quantity}`).join(", ")}
                           </div>
                           <div className="text-xs text-muted-foreground">{formatDate(order.createdAt)}</div>
                         </div>
