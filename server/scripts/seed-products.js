@@ -555,6 +555,116 @@ const seedProducts = [{
   status: "active",
   isNewProduct: false,
   isFeatured: false
+},
+  {
+  name: "Blueberry Cheesecake",
+  description: "Creamy baked cheesecake topped with luscious blueberry compote and a buttery biscuit base.",
+  price: 475,
+  category: "Cakes",
+  image: "/uploads/image-1760238647720-204144316.jpg",
+  availability: "In House Only",
+  status: "active",
+  isNewProduct: false,
+  isFeatured: false
+},
+  {
+  name: "Chocolate Cherry Mousse Cake",
+  description: "Decadent layers of chocolate mousse and sponge topped with fresh cherries and glossy chocolate ganache.",
+  price: 390,
+  category: "Cakes",
+  image: "/uploads/image-1760238688769-125516758.jpg",
+  availability: "In House Only",
+  status: "active",
+  isNewProduct: false,
+  isFeatured: false
+},
+  {
+  name: "Caramel Crunch Sundae",
+  description: "Layers of vanilla ice cream, caramel sauce, whipped cream, and crispy toffee bits in a glass.",
+  price: 675,
+  category: "Beverages",
+  image: "/uploads/image-1760238718867-650566037.jpg",
+  availability: "In House Only",
+  status: "active",
+  isNewProduct: false,
+  isFeatured: false
+},
+  {
+  name: "Steamed Chicken Momos",
+  description: "Soft dumplings filled with minced chicken, herbs, and spices served with spicy chili sauce.",
+  price: 690,
+  category: "Appetizers",
+  image: "/uploads/image-1760238755517-657781327.jpg",
+  availability: "Available",
+  status: "active",
+  isNewProduct: false,
+  isFeatured: false
+},
+  {
+  name: "Chicken Spring Rolls",
+  description: "Tender chicken breast rolled with creamy spinach filling, oven-baked to golden perfection.",
+  price: 575,
+  category: "Sides",
+  image: "/uploads/image-1760238796301-574620264.jpg",
+  availability: "Available",
+  status: "active",
+  isNewProduct: false,
+  isFeatured: false
+},
+  {
+  name: "Matcha Latte",
+  description: "Smooth, creamy green tea latte made with pure matcha powder and steamed milk rich in antioxidants and flavor.",
+  price: 1250,
+  category: "Beverages",
+  image: "/uploads/image-1760238823960-246909614.jpg",
+  availability: "In House Only",
+  status: "active",
+  isNewProduct: false,
+  isFeatured: false
+},
+  {
+  name: "French Fries",
+  description: "Crispy golden fries served with a side of tangy ketchup the perfect comfort snack.",
+  price: 570,
+  category: "Appetizers",
+  image: "/uploads/image-1760239612689-5120343.png",
+  availability: "Available",
+  status: "active",
+  isNewProduct: false,
+  isFeatured: false
+},
+  {
+  name: "Chicken Nuggets",
+  description: "Crispy, juicy chicken bites served with creamy mayo and BBQ dip.",
+  price: 760,
+  category: "Appetizers",
+  image: "/uploads/image-1760239671769-257117571.jpg",
+  availability: "Available",
+  status: "active",
+  isNewProduct: false,
+  isFeatured: false
+},
+  {
+  name: "Belgian Waffles with Fresh Strawberries",
+  description: "Golden waffles topped with whipped cream and fresh strawberries, dusted with icing sugar.",
+  price: 890,
+  category: "Sides",
+  image: "/uploads/image-1760283575700-231468095.jpg",
+  availability: "Available",
+  status: "active",
+  isNewProduct: false,
+  isFeatured: false
+},
+  {
+  name: "Caramel Pancakes",
+  description: "Fluffy pancakes layered with caramel drizzle, strawberries, and chopped nuts the perfect sweet start to your day.",
+  price: 1950,
+  category: "Sides",
+  image: "/uploads/image-1760283962529-754950976.png",
+  availability: "Available",
+  status: "active",
+  isNewProduct: true,
+  isFeatured: true
 }];
 
 async function seedDatabase() {
