@@ -11,11 +11,16 @@
     "lint": "eslint .",
     "preview": "next start",
     "server": "node server/server.js",
+    "server:firebase": "node server/server-firebase.js",
     "dev:server": "nodemon server/server.js",
+    "dev:server:firebase": "nodemon server/server-firebase.js",
     "dev:full": "concurrently \"npm run dev\" \"npm run dev:server\"",
+    "dev:firebase": "concurrently \"npm run dev\" \"npm run dev:server:firebase\"",
     "seed:admin": "node server/scripts/seed-admin.js",
     "seed:products": "node server/scripts/seed-products.js",
-    "seed:categories": "node server/scripts/seed-categories.js"
+    "seed:categories": "node server/scripts/seed-categories.js",
+    "migrate:firebase": "node server/scripts/migrate-to-firebase.js",
+    "test:firebase": "./test-firebase-migration.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -59,6 +64,8 @@
     "embla-carousel-react": "^8.6.0",
     "express": "^5.1.0",
     "express-validator": "^7.2.1",
+    "firebase": "^12.4.0",
+    "firebase-admin": "^13.5.0",
     "input-otp": "^1.4.2",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.462.0",

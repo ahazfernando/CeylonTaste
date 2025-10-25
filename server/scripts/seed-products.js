@@ -665,6 +665,17 @@ const seedProducts = [{
   status: "active",
   isNewProduct: true,
   isFeatured: true
+},
+  {
+  name: "Chocoalte Milkshake",
+  description: "Test Product 1",
+  price: 290,
+  category: "Beverages",
+  image: "/uploads/image-1760780684000-354268720.jpg",
+  availability: "Available",
+  status: "active",
+  isNewProduct: true,
+  isFeatured: false
 }];
 
 async function seedDatabase() {

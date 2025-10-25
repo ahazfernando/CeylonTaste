@@ -121,13 +121,13 @@ const Products = () => {
         if (a.isNewProduct !== b.isNewProduct) {
           return (b.isNewProduct ? 1 : 0) - (a.isNewProduct ? 1 : 0);
         }
-        return b.id.localeCompare(a.id);
+        return (b.id || '').localeCompare(a.id || '');
       case "oldest":
         // Sort by isNewProduct flag first, then by ID (assuming older products have lower IDs)
         if (a.isNewProduct !== b.isNewProduct) {
           return (a.isNewProduct ? 1 : 0) - (b.isNewProduct ? 1 : 0);
         }
-        return a.id.localeCompare(b.id);
+        return (a.id || '').localeCompare(b.id || '');
       case "price-low":
         return a.price - b.price;
       case "price-high":
@@ -474,7 +474,7 @@ const Products = () => {
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="" disabled>
+                      <SelectItem value="no-categories" disabled>
                         No categories available
                       </SelectItem>
                     )}
@@ -677,7 +677,7 @@ const Products = () => {
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="" disabled>
+                      <SelectItem value="no-categories" disabled>
                         No categories available
                       </SelectItem>
                     )}

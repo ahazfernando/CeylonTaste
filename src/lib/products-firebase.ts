@@ -1,23 +1,82 @@
-// Shared product management utilities
+import { collection, getDocs, getDoc, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy } from 'firebase/firestore';
+import { db } from './firebase';
+
 export interface Product {
   id: string;
   name: string;
   description: string;
   price: number;
   originalPrice?: number;
-  rating: number;
-  reviewCount: number;
+  reviewCount?: number;
   category: string;
+  image: string;
+  availability: 'Available' | 'Unavailable' | 'In House Only' | 'Breakfast' | 'Lunch' | 'Dinner';
+  status?: 'active' | 'inactive';
   isNewProduct?: boolean;
   isFeatured?: boolean;
-  image: string;
-  availability?: 'Available' | 'Unavailable' | 'In House Only' | 'Breakfast' | 'Lunch' | 'Dinner';
-  status?: 'active' | 'inactive';
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const API_BASE_URL = 'http://localhost:4000/api';
 
-// API service for MongoDB integration
+// Firebase service for products
+export const firebaseProductService = {
+  // Get all products from Firebase
+  getAllProducts: async (): Promise<Product[]> => {
+    try {
+      const productsRef = collection(db, 'products');
+      const snapshot = await getDocs(productsRef);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Product));
+    } catch (error) {
+      console.error('Error fetching products from Firebase:', error);
+      return [];
+    }
+  },
+
+  // Get products by category from Firebase
+  getProductsByCategory: async (category: string): Promise<Product[]> => {
+    try {
+      const productsRef = collection(db, 'products');
+      const q = category === "All" 
+        ? productsRef
+        : query(productsRef, where('category', '==', category));
+      
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Product));
+    } catch (error) {
+      console.error('Error fetching products by category from Firebase:', error);
+      return [];
+    }
+  },
+
+  // Get single product from Firebase
+  getProductById: async (id: string): Promise<Product | null> => {
+    try {
+      const productRef = doc(db, 'products', id);
+      const productSnap = await getDoc(productRef);
+      
+      if (productSnap.exists()) {
+        return {
+          id: productSnap.id,
+          ...productSnap.data()
+        } as Product;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching product from Firebase:', error);
+      return null;
+    }
+  }
+};
+
+// API service for MongoDB integration (fallback)
 export const productService = {
   // Get all products
   getAllProducts: async (): Promise<Product[]> => {
@@ -27,7 +86,7 @@ export const productService = {
       const products = await response.json();
       return products.map((product: any) => ({
         ...product,
-        id: product._id || product.id, // Handle both MongoDB and Firebase formats
+        id: product._id || product.id,
       }));
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -46,11 +105,30 @@ export const productService = {
       const products = await response.json();
       return products.map((product: any) => ({
         ...product,
-        id: product._id || product.id, // Handle both MongoDB and Firebase formats
+        id: product._id || product.id,
       }));
     } catch (error) {
       console.error('Error fetching products by category:', error);
       return [];
+    }
+  },
+
+  // Get single product
+  getProductById: async (id: string): Promise<Product | null> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/products/${id}`);
+      if (!response.ok) {
+        if (response.status === 404) return null;
+        throw new Error('Failed to fetch product');
+      }
+      const product = await response.json();
+      return {
+        ...product,
+        id: product._id || product.id,
+      };
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      return null;
     }
   },
 
@@ -73,7 +151,7 @@ export const productService = {
       const product = await response.json();
       return {
         ...product,
-        id: product._id || product.id, // Handle both MongoDB and Firebase formats
+        id: product._id || product.id,
       };
     } catch (error) {
       console.error('Error creating product:', error);
@@ -82,14 +160,14 @@ export const productService = {
   },
 
   // Update product
-  updateProduct: async (id: string, updates: Partial<Product>): Promise<Product | null> => {
+  updateProduct: async (id: string, productData: Partial<Product>): Promise<Product | null> => {
     try {
       const response = await fetch(`${API_BASE_URL}/products/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updates),
+        body: JSON.stringify(productData),
       });
       
       if (!response.ok) {
@@ -100,7 +178,7 @@ export const productService = {
       const product = await response.json();
       return {
         ...product,
-        id: product._id || product.id, // Handle both MongoDB and Firebase formats
+        id: product._id || product.id,
       };
     } catch (error) {
       console.error('Error updating product:', error);
@@ -127,75 +205,15 @@ export const productService = {
     }
   },
 
-  // Get product by ID
-  getProductById: async (id: string): Promise<Product | null> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/products/${id}`);
-      if (!response.ok) throw new Error('Failed to fetch product');
-      const product = await response.json();
-      return {
-        ...product,
-        id: product._id || product.id, // Handle both MongoDB and Firebase formats
-      };
-    } catch (error) {
-      console.error('Error fetching product:', error);
-      return null;
-    }
-  },
-
-  // Get all categories from the categories collection
+  // Get categories
   getCategories: async (): Promise<string[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/categories`);
+      const response = await fetch(`${API_BASE_URL}/products/categories/list`);
       if (!response.ok) throw new Error('Failed to fetch categories');
-      const data = await response.json();
-      return data.categories.map((cat: any) => cat.name);
+      return await response.json();
     } catch (error) {
       console.error('Error fetching categories:', error);
       return [];
     }
-  },
-};
-
-// Image upload utility
-export const imageUploadService = {
-  // Upload image to server
-  uploadImage: async (file: File): Promise<string> => {
-    try {
-      const formData = new FormData();
-      formData.append('image', file);
-
-      const response = await fetch(`${API_BASE_URL}/upload/image`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to upload image');
-      }
-
-      const result = await response.json();
-      return result.imageUrl;
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      throw error;
-    }
-  },
-
-  // Validate image file
-  validateImage: (file: File): { valid: boolean; error?: string } => {
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-
-    if (!allowedTypes.includes(file.type)) {
-      return { valid: false, error: 'Please upload a JPEG, PNG, or WebP image' };
-    }
-
-    if (file.size > maxSize) {
-      return { valid: false, error: 'Image size must be less than 5MB' };
-    }
-
-    return { valid: true };
-  },
+  }
 };
