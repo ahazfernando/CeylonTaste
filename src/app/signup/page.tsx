@@ -13,7 +13,7 @@ import Image from "next/image";
 import primaryLogo from "@/assets/Home/CeylonTaste-Primary-2.png";
 import loginCouple from "@/assets/Login/login-couple.jpg";
 import loginFamily from "@/assets/Login/login-family.jpg";
-import { getApiBaseUrl } from "@/lib/api";
+import { FirebaseAuthService } from "@/lib/auth-firebase";
 
 export default function SignUp() {
   const router = useRouter();
@@ -44,27 +44,23 @@ export default function SignUp() {
         return;
       }
       setLoading(true);
-      const apiUrl = getApiBaseUrl();
-      if (!apiUrl) {
-        throw new Error("API URL not configured");
+      
+      // Use Firebase authentication
+      const user = await FirebaseAuthService.signUp(email, password, fullName);
+      
+      // Store user data in localStorage
+      if (user) {
+        try { 
+          localStorage.setItem('user', JSON.stringify(user));
+        } catch {}
       }
-      const res = await fetch(`${apiUrl}/auth/signup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ name: fullName, email, password }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error || "Signup failed");
+      
+      // Redirect based on role
+      if (user.role === "admin") {
+        router.push("/admin/dashboard");
+      } else {
+        router.push("/");
       }
-      const data = await res.json();
-      if (data?.token) {
-        try { localStorage.setItem('tt_token', data.token); } catch {}
-      }
-      const role = data?.user?.role;
-      if (role === "admin") router.push("/admin/dashboard");
-      else router.push("/");
     } catch (e: any) {
       setError(e?.message || "Something went wrong");
     } finally {
