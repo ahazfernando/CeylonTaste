@@ -13,7 +13,7 @@ import Image from "next/image";
 import primaryLogo from "@/assets/Home/CeylonTaste-Primary-2.png";
 import loginCouple from "@/assets/Login/login-couple.jpg";
 import loginFamily from "@/assets/Login/login-family.jpg";
-import { FirebaseAuthService } from "@/lib/auth-firebase";
+import { apiAuthService } from "@/lib/auth-firebase";
 
 const carouselImages = [
   {
@@ -44,13 +44,16 @@ export default function Login() {
       setError(null);
       setLoading(true);
       
-      // Use Firebase authentication
-      const user = await FirebaseAuthService.signIn(email, password);
+      // Use backend API for authentication
+      const { user, token } = await apiAuthService.signIn(email, password);
       
-      // Store user data in localStorage
+      // Store user data and token in localStorage
       if (user) {
         try { 
           localStorage.setItem('user', JSON.stringify(user));
+          if (token) {
+            localStorage.setItem('tt_token', token);
+          }
         } catch {}
       }
       
@@ -61,7 +64,9 @@ export default function Login() {
         router.push("/");
       }
     } catch (e: any) {
-      setError(e?.message || "Login failed. Please check your credentials.");
+      console.error('Login error:', e);
+      const errorMessage = e?.message || e?.error || "Login failed. Please check your credentials.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

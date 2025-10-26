@@ -13,7 +13,7 @@ import Image from "next/image";
 import primaryLogo from "@/assets/Home/CeylonTaste-Primary-2.png";
 import loginCouple from "@/assets/Login/login-couple.jpg";
 import loginFamily from "@/assets/Login/login-family.jpg";
-import { FirebaseAuthService } from "@/lib/auth-firebase";
+import { apiAuthService } from "@/lib/auth-firebase";
 
 export default function SignUp() {
   const router = useRouter();
@@ -45,13 +45,18 @@ export default function SignUp() {
       }
       setLoading(true);
       
-      // Use Firebase authentication
-      const user = await FirebaseAuthService.signUp(email, password, fullName);
+      // Use backend API for authentication
+      console.log('Attempting signup with:', { email, name: fullName });
+      const { user, token } = await apiAuthService.signUp(email, password, fullName);
+      console.log('Signup successful:', user);
       
-      // Store user data in localStorage
+      // Store user data and token in localStorage
       if (user) {
         try { 
           localStorage.setItem('user', JSON.stringify(user));
+          if (token) {
+            localStorage.setItem('tt_token', token);
+          }
         } catch {}
       }
       
@@ -62,7 +67,9 @@ export default function SignUp() {
         router.push("/");
       }
     } catch (e: any) {
-      setError(e?.message || "Something went wrong");
+      console.error('Signup error:', e);
+      const errorMessage = e?.message || e?.error || "Something went wrong";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

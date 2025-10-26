@@ -154,11 +154,25 @@ export const apiAuthService = {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Signup failed');
+        let errorMessage = 'Signup failed';
+        try {
+          const errorData = await response.json();
+          console.error('Signup API error response:', errorData);
+          errorMessage = errorData.error || errorData.message || errorMessage;
+          
+          // Handle validation errors
+          if (errorData.errors && Array.isArray(errorData.errors)) {
+            errorMessage = errorData.errors.map((e: any) => e.msg || e.message).join(', ');
+          }
+        } catch (e) {
+          console.error('Failed to parse error response:', e);
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
-      return await response.json();
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error('API signup error:', error);
       throw error;
@@ -177,11 +191,20 @@ export const apiAuthService = {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Login failed');
+        let errorMessage = 'Login failed';
+        try {
+          const errorData = await response.json();
+          console.error('Login API error response:', errorData);
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch (e) {
+          console.error('Failed to parse error response:', e);
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
-      return await response.json();
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error('API login error:', error);
       throw error;

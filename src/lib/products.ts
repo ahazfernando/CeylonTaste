@@ -163,7 +163,7 @@ export const imageUploadService = {
   // Upload image to Cloudinary
   uploadImage: async (file: File): Promise<string> => {
     try {
-      const { uploadImageToCloudinary } = await import('./cloudinary');
+      const { uploadImageToCloudinary } = await import('./cloudinary-client');
       return await uploadImageToCloudinary(file);
     } catch (error) {
       console.error('Error uploading image:', error);
