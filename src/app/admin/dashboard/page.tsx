@@ -68,20 +68,22 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
-        const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+        // For now, use mock data since we don't have backend
+        // You can replace this with actual Firebase queries later
+        const mockData: DashboardData = {
+          stats: {
+            totalRevenue: 0,
+            totalOrders: 0,
+            totalProducts: 0,
+            totalCustomers: 0,
+            revenueGrowth: 0,
+            orderGrowth: 0
+          },
+          recentOrders: [],
+          lowStockProducts: []
+        };
         
-        const response = await fetch("http://localhost:4000/api/admin/dashboard/stats", { 
-          credentials: "include", 
-          headers 
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setDashboardData(data);
-        } else {
-          setError('Failed to fetch dashboard data');
-        }
+        setDashboardData(mockData);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
         setError('Failed to fetch dashboard data');

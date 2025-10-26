@@ -65,11 +65,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Listen for storage changes (login/logout)
+  // Check auth state periodically and listen for changes
   useEffect(() => {
     if (!isInitialized) return;
     
-    const handleStorageChange = () => {
+    const checkAuthState = () => {
       const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
       const isAuthenticated = !!token;
       
@@ -83,9 +83,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
     };
     
+    // Check immediately
+    checkAuthState();
+    
+    // Check periodically (every 500ms)
+    const interval = setInterval(checkAuthState, 500);
+    
+    // Also listen to storage events (for other tabs)
+    const handleStorageChange = () => {
+      checkAuthState();
+    };
+    
     window.addEventListener('storage', handleStorageChange);
     
     return () => {
+      clearInterval(interval);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, [isInitialized]);

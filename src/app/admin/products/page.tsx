@@ -56,17 +56,29 @@ const Products = () => {
         const productsData = await productService.getAllProducts();
         setProducts(productsData);
 
-        // Load categories
-        const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
-        const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-        const categoriesResponse = await fetch('http://localhost:4000/api/categories', { headers });
-        const categoriesData = await categoriesResponse.json();
-        const categoriesList = (categoriesData?.categories || []).map((c: any) => ({ 
-          id: c._id || c.id, 
-          name: c.name, 
-          description: c.description 
-        }));
-        setCategories(categoriesList);
+        // Load categories from Firebase, fallback to unique product categories
+        try {
+          const { collection, getDocs } = await import('firebase/firestore');
+          const { db } = await import('@/lib/firebase');
+          const categoriesRef = collection(db, 'categories');
+          const snapshot = await getDocs(categoriesRef);
+          const categoriesList = snapshot.docs.map(doc => ({ 
+            id: doc.id, 
+            name: doc.data().name, 
+            description: doc.data().description || '' 
+          }));
+          setCategories(categoriesList);
+        } catch (error) {
+          console.log('Categories collection not found, using unique product categories');
+          // Fallback: get unique categories from products
+          const uniqueCategories = Array.from(new Set(productsData.map(p => p.category)));
+          const categoriesList = uniqueCategories.map((cat, index) => ({ 
+            id: `cat-${index}`, 
+            name: cat, 
+            description: cat 
+          }));
+          setCategories(categoriesList);
+        }
       } catch (error) {
         console.error('Failed to load data:', error);
         toast({
@@ -249,6 +261,8 @@ const Products = () => {
         isNewProduct: formData.isNewProduct,
         isFeatured: formData.isFeatured,
         status: 'active' as const,
+        rating: 0,
+        reviewCount: 0,
       };
 
       if (isEditing && editingProduct) {

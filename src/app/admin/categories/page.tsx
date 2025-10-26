@@ -10,6 +10,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, Search, Edit, Trash2, Tags } from "lucide-react";
 import { useState, useEffect } from "react";
 import { CategoryListSkeleton } from "@/components/skeletons/category-skeleton";
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 type Category = { id: string; name: string; description: string };
 
@@ -30,16 +32,23 @@ export default function AdminCategoriesPage() {
   );
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
-    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-    fetch('http://localhost:4000/api/categories', { headers })
-      .then((r) => r.json())
-      .then((data) => {
-        const rows: Category[] = (data?.categories || []).map((c: any) => ({ id: c._id || c.id, name: c.name || '', description: c.description || '' }));
+    const loadCategories = async () => {
+      try {
+        const categoriesRef = collection(db, 'categories');
+        const snapshot = await getDocs(categoriesRef);
+        const rows: Category[] = snapshot.docs.map(doc => ({
+          id: doc.id,
+          name: doc.data().name || '',
+          description: doc.data().description || ''
+        }));
         setCategories(rows);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadCategories();
   }, []);
 
   async function handleDelete(id: string) {
@@ -53,14 +62,15 @@ export default function AdminCategoriesPage() {
   async function confirmDelete() {
     if (!categoryToDelete) return;
     
-    const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
-    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-    const res = await fetch(`http://localhost:4000/api/categories/${categoryToDelete.id}`, { method: 'DELETE', headers, credentials: 'include' });
-    if (res.ok) {
+    try {
+      await deleteDoc(doc(db, 'categories', categoryToDelete.id));
       setCategories((prev) => prev.filter((c) => c.id !== categoryToDelete.id));
+    } catch (error) {
+      console.error('Error deleting category:', error);
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setCategoryToDelete(null);
     }
-    setIsDeleteDialogOpen(false);
-    setCategoryToDelete(null);
   }
 
   async function handleUpdate(id: string) {
@@ -76,23 +86,24 @@ export default function AdminCategoriesPage() {
     e.preventDefault();
     if (!editingCategory || !editFormData.name.trim()) return;
     
-    const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    
-    const res = await fetch(`http://localhost:4000/api/categories/${editingCategory.id}`, { 
-      method: 'PATCH', 
-      headers, 
-      credentials: 'include', 
-      body: JSON.stringify({ name: editFormData.name.trim(), description: editFormData.description.trim() }) 
-    });
-    
-    if (res.ok) {
-      const data = await res.json();
-      setCategories((prev) => prev.map((c) => (c.id === editingCategory.id ? { id: editingCategory.id, name: data.category.name, description: data.category.description } : c)));
+    try {
+      await updateDoc(doc(db, 'categories', editingCategory.id), {
+        name: editFormData.name.trim(),
+        description: editFormData.description.trim(),
+        updatedAt: new Date().toISOString()
+      });
+      
+      setCategories((prev) => prev.map((c) => 
+        c.id === editingCategory.id 
+          ? { id: editingCategory.id, name: editFormData.name.trim(), description: editFormData.description.trim() } 
+          : c
+      ));
+      
       setIsEditDialogOpen(false);
       setEditingCategory(null);
       setEditFormData({ name: "", description: "" });
+    } catch (error) {
+      console.error('Error updating category:', error);
     }
   }
 
@@ -126,22 +137,20 @@ export default function AdminCategoriesPage() {
                       const name = String(formData.get('categoryName') || '').trim();
                       const description = String(formData.get('categoryDescription') || '').trim();
                       if (!name) return;
-                      const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
-                      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-                      if (token) headers['Authorization'] = `Bearer ${token}`;
-                      const res = await fetch('http://localhost:4000/api/categories', {
-                        method: 'POST',
-                        headers,
-                        credentials: 'include',
-                        body: JSON.stringify({ name, description })
-                      });
-                      if (res.ok) {
-                        const data = await res.json();
-                        setCategories((prev) => [{ id: String(data.category.id), name: data.category.name, description: data.category.description }, ...prev]);
+                      
+                      try {
+                        const docRef = await addDoc(collection(db, 'categories'), {
+                          name,
+                          description,
+                          createdAt: new Date().toISOString(),
+                          updatedAt: new Date().toISOString()
+                        });
+                        
+                        setCategories((prev) => [{ id: docRef.id, name, description }, ...prev]);
                         setIsDialogOpen(false);
                         form.reset();
-                      } else {
-                        // Optionally show error
+                      } catch (error) {
+                        console.error('Error creating category:', error);
                       }
                     }}>
                     <div className="space-y-2">

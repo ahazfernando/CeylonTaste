@@ -18,47 +18,54 @@ export default function AdminLayout({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let cancelled = false;
-    const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
-    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-
-    console.log("Admin Layout: Checking auth for", pathname);
-    console.log("Admin Layout: Token from localStorage:", token);
-
-    fetch("http://localhost:4000/api/auth/me", { credentials: "include", headers })
-      .then(async (r) => {
-        console.log("Admin Layout: Fetch response status:", r.status);
-        if (r.ok) {
-          const data = await r.json();
-          console.log("Admin Layout: User data:", data);
-          const role = data?.user?.role;
-          console.log("Admin Layout: User role:", role);
-          if (!cancelled && role === "admin") {
-            console.log("Admin Layout: Setting authorized to true");
-            setAuthorized(true);
-            setLoading(false);
-          } else {
-            console.log("Admin Layout: Role not admin or cancelled, redirecting to /");
-            if (!cancelled) router.replace("/");
-          }
-        } else {
-          const errorText = await r.text();
-          console.log("Admin Layout: Fetch failed with response:", errorText);
-          throw new Error(`HTTP ${r.status}`);
+    const checkAdminAccess = async () => {
+      try {
+        // Get user data from localStorage (set by Firebase)
+        const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
+        const userStr = typeof window !== 'undefined' ? localStorage.getItem('tt_user') : null;
+        
+        if (!token || !userStr) {
+          console.log("Admin Layout: No token or user data, redirecting to /");
+          router.replace("/");
+          return;
         }
-      })
-      .catch((error) => {
-        console.log("Admin Layout: Fetch error:", error);
-        if (!cancelled) router.replace("/");
-      });
-    return () => { cancelled = true; };
+        
+        const userData = JSON.parse(userStr);
+        const role = userData?.role;
+        
+        console.log("Admin Layout: User role:", role);
+        
+        if (role === "admin") {
+          console.log("Admin Layout: Setting authorized to true");
+          setAuthorized(true);
+        } else {
+          console.log("Admin Layout: Role not admin, redirecting to /");
+          router.replace("/");
+        }
+      } catch (error) {
+        console.log("Admin Layout: Error checking auth:", error);
+        router.replace("/");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAdminAccess();
   }, [router, pathname]);
 
   async function handleLogout() {
     try {
-      await fetch("http://localhost:4000/api/auth/logout", { method: "POST", credentials: "include" });
+      // Import Firebase sign out
+      const { apiAuthService } = await import('@/lib/auth-firebase');
+      await apiAuthService.signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Clear localStorage anyway
+      try { 
+        localStorage.removeItem('tt_token');
+        localStorage.removeItem('tt_user');
+      } catch {}
     } finally {
-      try { localStorage.removeItem('tt_token'); } catch {}
       router.replace("/");
     }
   }

@@ -69,32 +69,28 @@ export default function Profile() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
+        // Get user data from localStorage (set by Firebase)
         const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
-        const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+        const userStr = typeof window !== 'undefined' ? localStorage.getItem('tt_user') : null;
         
-        // Fetch user data
-        const userResponse = await fetch("http://localhost:4000/api/auth/me", { 
-          credentials: "include", 
-          headers 
-        });
-        
-        if (!userResponse.ok) {
-          throw new Error('Failed to fetch user data');
+        if (!token || !userStr) {
+          throw new Error('User not authenticated');
         }
         
-        const userData = await userResponse.json();
-        setUser(userData.user);
+        const userData = JSON.parse(userStr);
         
-        // Fetch user orders
-        const ordersResponse = await fetch("http://localhost:4000/api/orders", { 
-          credentials: "include", 
-          headers 
+        // Map Firebase user to the expected format
+        setUser({
+          id: userData.id || userData.uid,
+          name: userData.name,
+          email: userData.email,
+          role: userData.role || 'user',
+          createdAt: userData.createdAt || new Date().toISOString(),
+          address: userData.address
         });
         
-        if (ordersResponse.ok) {
-          const ordersData = await ordersResponse.json();
-          setOrders(ordersData.orders || []);
-        }
+        // Orders will be empty for now (you can implement Firestore orders later)
+        setOrders([]);
         
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load profile');
@@ -171,22 +167,24 @@ export default function Profile() {
     setSavingAddress(true);
     
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
-      };
-
-      const response = await fetch(`http://localhost:4000/api/auth/profile`, {
-        method: 'PUT',
-        headers,
-        credentials: 'include',
-        body: JSON.stringify({ address: addressForm })
-      });
-
-      if (response.ok) {
-        const updatedUser = await response.json();
-        setUser(updatedUser.user);
+      // Update user address in localStorage
+      const userStr = typeof window !== 'undefined' ? localStorage.getItem('tt_user') : null;
+      if (userStr) {
+        const userData = JSON.parse(userStr);
+        const updatedUser = {
+          ...userData,
+          address: addressForm
+        };
+        
+        // Save back to localStorage
+        localStorage.setItem('tt_user', JSON.stringify(updatedUser));
+        
+        // Update state
+        setUser({
+          ...user,
+          address: addressForm
+        });
+        
         setShowAddressForm(false);
         setAddressForm({
           street: "",
@@ -201,19 +199,12 @@ export default function Profile() {
           title: "Success!",
           description: "Your address has been saved successfully.",
         });
-      } else {
-        const errorData = await response.json();
-        toast({
-          title: "Error",
-          description: errorData.error || "Failed to save address. Please try again.",
-          variant: "destructive",
-        });
       }
     } catch (error) {
       console.error('Failed to save address:', error);
       toast({
         title: "Error",
-        description: "Network error. Please check your connection and try again.",
+        description: "Failed to save address. Please try again.",
         variant: "destructive",
       });
     } finally {

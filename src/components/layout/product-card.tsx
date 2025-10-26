@@ -46,30 +46,29 @@ export function ProductCard({
     ? Math.round(((originalPrice - price) / originalPrice) * 100)
     : 0;
 
-  // Check authentication status
+  // Check authentication status using Firebase/localStorage
   useEffect(() => {
-    let cancelled = false;
-    const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
-    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-    
-    fetch("http://localhost:4000/api/auth/me", { credentials: "include", headers })
-      .then(async (r) => (r.ok ? r.json() : Promise.reject()))
-      .then((data) => {
-        if (!cancelled) {
-          setCurrentUser(data?.user || null);
-          setLoading(false);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
+    const checkAuth = async () => {
+      try {
+        // Check if token exists in localStorage (set by Firebase auth)
+        const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
+        const userStr = typeof window !== 'undefined' ? localStorage.getItem('tt_user') : null;
+        
+        if (token && userStr) {
+          const userData = JSON.parse(userStr);
+          setCurrentUser(userData);
+        } else {
           setCurrentUser(null);
-          setLoading(false);
         }
-      });
-    
-    return () => {
-      cancelled = true;
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        setCurrentUser(null);
+      } finally {
+        setLoading(false);
+      }
     };
+
+    checkAuth();
   }, []);
 
   const handleAddToCart = () => {

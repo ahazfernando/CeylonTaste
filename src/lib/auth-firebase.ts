@@ -34,11 +34,15 @@ export class FirebaseAuthService {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // Define admin emails (you can add more emails here)
+      const adminEmails = ['jordan@gmail.com', 'jordan04@gmail.com'];
+      const isAdmin = adminEmails.includes(email.toLowerCase());
+
       // Create user document in Firestore
       const userData = {
         name,
         email,
-        role: 'user',
+        role: isAdmin ? 'admin' : 'user',
         customerStatus: 'active',
         createdAt: new Date(),
         updatedAt: new Date()
