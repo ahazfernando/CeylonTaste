@@ -53,7 +53,7 @@ export default function SignUp() {
       // Store user data and token in localStorage
       if (user) {
         try { 
-          localStorage.setItem('user', JSON.stringify(user));
+          localStorage.setItem('tt_user', JSON.stringify(user));
           if (token) {
             localStorage.setItem('tt_token', token);
           }

@@ -24,16 +24,20 @@ export function Navigation({ cartItemCount }: NavigationProps) {
 
   useEffect(() => {
     let cancelled = false;
-    const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
-    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-    fetch("http://localhost:4000/api/auth/me", { credentials: "include", headers })
-      .then(async (r) => (r.ok ? r.json() : Promise.reject()))
-      .then((data) => {
-        if (!cancelled) setCurrentUser(data?.user || null);
-      })
-      .catch(() => {
+    
+    // Check localStorage for user
+    const userStr = typeof window !== 'undefined' ? localStorage.getItem('tt_user') : null;
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (!cancelled) setCurrentUser(user);
+      } catch (e) {
         if (!cancelled) setCurrentUser(null);
-      });
+      }
+    } else {
+      if (!cancelled) setCurrentUser(null);
+    }
+    
     return () => {
       cancelled = true;
     };
@@ -41,9 +45,10 @@ export function Navigation({ cartItemCount }: NavigationProps) {
 
   async function handleLogout() {
     try {
-      await fetch("http://localhost:4000/api/auth/logout", { method: "POST", credentials: "include" });
-    } finally {
+      // Clear Firebase session
+      try { localStorage.removeItem('tt_user'); } catch {}
       try { localStorage.removeItem('tt_token'); } catch {}
+    } finally {
       setCurrentUser(null);
       clearCart(); // Clear cart on logout
       setIsMenuOpen(false);
