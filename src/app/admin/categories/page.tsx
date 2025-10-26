@@ -9,12 +9,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Plus, Search, Edit, Trash2, Tags } from "lucide-react";
 import { useState, useEffect } from "react";
+import { CategoryListSkeleton } from "@/components/skeletons/category-skeleton";
 
 type Category = { id: string; name: string; description: string };
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -23,8 +25,8 @@ export default function AdminCategoriesPage() {
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
   const filteredCategories = categories.filter(category =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    category.description.toLowerCase().includes(searchTerm.toLowerCase())
+    category?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (category?.description && category.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   useEffect(() => {
@@ -33,10 +35,11 @@ export default function AdminCategoriesPage() {
     fetch('http://localhost:4000/api/categories', { headers })
       .then((r) => r.json())
       .then((data) => {
-        const rows: Category[] = (data?.categories || []).map((c: any) => ({ id: c._id || c.id, name: c.name, description: c.description }));
+        const rows: Category[] = (data?.categories || []).map((c: any) => ({ id: c._id || c.id, name: c.name || '', description: c.description || '' }));
         setCategories(rows);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   async function handleDelete(id: string) {
@@ -226,9 +229,12 @@ export default function AdminCategoriesPage() {
               <Input placeholder="Search categories..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 border-border" />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredCategories.map((category) => {
-                return (
+            {loading ? (
+              <CategoryListSkeleton count={6} />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredCategories.map((category) => {
+                  return (
                   <Card key={category.id} className="border-border shadow-warm hover:shadow-elegant transition-smooth group">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
@@ -245,12 +251,13 @@ export default function AdminCategoriesPage() {
                       </div>
                     </CardHeader>
                     
-                  </Card>
-                );
-              })}
-            </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
 
-            {filteredCategories.length === 0 && (
+            {!loading && filteredCategories.length === 0 && (
               <div className="text-center py-12">
                 <Tags className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">No categories found</h3>

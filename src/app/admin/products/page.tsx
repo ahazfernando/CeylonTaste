@@ -15,6 +15,7 @@ import { Plus, Search, Edit, Trash2, Package, Upload, X, Image as ImageIcon, Fil
 import { productService, imageUploadService, Product } from "@/lib/products";
 import { getImageUrl } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { ProductListSkeleton } from "@/components/skeletons/product-skeleton";
 
 const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -45,6 +46,7 @@ const Products = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Load products and categories on component mount
   useEffect(() => {
@@ -72,6 +74,8 @@ const Products = () => {
           description: "Failed to load products and categories",
           variant: "destructive",
         });
+      } finally {
+        setLoading(false);
       }
     };
     loadData();
@@ -831,8 +835,11 @@ const Products = () => {
       </div>
 
       {/* Products Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {paginatedProducts.map((product) => (
+      {loading ? (
+        <ProductListSkeleton count={9} />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {paginatedProducts.map((product) => (
           <Card key={product.id} className="border-border shadow-warm hover:shadow-elegant transition-smooth">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
@@ -885,7 +892,8 @@ const Products = () => {
             </CardContent>
           </Card>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (

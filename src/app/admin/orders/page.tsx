@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Search, Eye, Clock, CheckCircle, XCircle, Package, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { OrderListSkeleton } from "@/components/skeletons/order-skeleton";
 
 interface OrderItem {
   product: {
@@ -194,9 +195,12 @@ export default function AdminOrdersPage() {
             <Card className="border-border shadow-warm">
               <CardHeader><CardTitle className="text-foreground">Order Management</CardTitle><CardDescription className="text-muted-foreground">View and manage all customer orders</CardDescription></CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader><TableRow className="border-border"><TableHead className="text-foreground">Order ID</TableHead><TableHead className="text-foreground">Customer</TableHead><TableHead className="text-foreground">Shipping Address</TableHead><TableHead className="text-foreground">Items</TableHead><TableHead className="text-foreground">Total</TableHead><TableHead className="text-foreground">Status</TableHead><TableHead className="text-foreground">Date & Time</TableHead><TableHead className="text-foreground">Actions</TableHead></TableRow></TableHeader>
-                  <TableBody>
+                {loading ? (
+                  <OrderListSkeleton count={6} />
+                ) : (
+                  <Table>
+                    <TableHeader><TableRow className="border-border"><TableHead className="text-foreground">Order ID</TableHead><TableHead className="text-foreground">Customer</TableHead><TableHead className="text-foreground">Shipping Address</TableHead><TableHead className="text-foreground">Items</TableHead><TableHead className="text-foreground">Total</TableHead><TableHead className="text-foreground">Status</TableHead><TableHead className="text-foreground">Date & Time</TableHead><TableHead className="text-foreground">Actions</TableHead></TableRow></TableHeader>
+                    <TableBody>
                     {filteredOrders.map((order) => (
                       <TableRow key={order._id} className="border-border">
                         <TableCell className="font-medium text-foreground">{order.orderNumber}</TableCell>
@@ -245,9 +249,10 @@ export default function AdminOrdersPage() {
                         </TableCell>
                       </TableRow>
                     ))}
-                  </TableBody>
-                </Table>
-                {filteredOrders.length === 0 && (<div className="text-center py-12"><Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" /><h3 className="text-lg font-medium text-foreground mb-2">No orders found</h3><p className="text-muted-foreground">Try adjusting your search or filter criteria.</p></div>)}
+                    </TableBody>
+                  </Table>
+                )}
+                {!loading && filteredOrders.length === 0 && (<div className="text-center py-12"><Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" /><h3 className="text-lg font-medium text-foreground mb-2">No orders found</h3><p className="text-muted-foreground">Try adjusting your search or filter criteria.</p></div>)}
               </CardContent>
             </Card>
     </main>

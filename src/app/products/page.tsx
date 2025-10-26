@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter, Grid, List } from "lucide-react";
 import { productService, Product } from "@/lib/products";
+import { ProductListSkeleton } from "@/components/skeletons/product-skeleton";
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -135,19 +136,23 @@ export default function Products() {
         </div>
 
         {/* Products Grid */}
-        <div className={
-          viewMode === "grid" 
-            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-            : "space-y-4"
-        }>
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              {...product}
-              className={viewMode === "list" ? "flex-row" : ""}
-            />
-          ))}
-        </div>
+        {loading ? (
+          <ProductListSkeleton count={8} />
+        ) : (
+          <div className={
+            viewMode === "grid" 
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              : "space-y-4"
+          }>
+            {filteredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                {...product}
+                className={viewMode === "list" ? "flex-row" : ""}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Empty State */}
         {filteredProducts.length === 0 && (

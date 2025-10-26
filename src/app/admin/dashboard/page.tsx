@@ -24,6 +24,7 @@ import { useState, useEffect } from "react";
 import { RevenueChart } from "@/components/charts/revenue-chart";
 import { TopProductsChart } from "@/components/charts/top-products-chart";
 import { CustomerGrowthChart } from "@/components/charts/customer-growth-chart";
+import { DashboardSkeleton } from "@/components/skeletons/dashboard-skeleton";
 
 interface DashboardStats {
   totalRevenue: number;
@@ -165,7 +166,11 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {loading ? (
+          <DashboardSkeleton />
+        ) : (
+          <>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="shadow-warm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -354,6 +359,8 @@ export default function AdminDashboard() {
             </div>
           </TabsContent>
         </Tabs>
+          </>
+        )}
       </main>
     );
   }
