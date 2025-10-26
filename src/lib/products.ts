@@ -160,24 +160,11 @@ export const productService = {
 
 // Image upload utility
 export const imageUploadService = {
-  // Upload image to server
+  // Upload image to Cloudinary
   uploadImage: async (file: File): Promise<string> => {
     try {
-      const formData = new FormData();
-      formData.append('image', file);
-
-      const response = await fetch(`${API_BASE_URL}/upload/image`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to upload image');
-      }
-
-      const result = await response.json();
-      return result.imageUrl;
+      const { uploadImageToCloudinary } = await import('./cloudinary');
+      return await uploadImageToCloudinary(file);
     } catch (error) {
       console.error('Error uploading image:', error);
       throw error;
@@ -186,15 +173,15 @@ export const imageUploadService = {
 
   // Validate image file
   validateImage: (file: File): { valid: boolean; error?: string } => {
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const maxSize = 10 * 1024 * 1024; // 10MB (Cloudinary supports larger files)
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
     if (!allowedTypes.includes(file.type)) {
-      return { valid: false, error: 'Please upload a JPEG, PNG, or WebP image' };
+      return { valid: false, error: 'Please upload a JPEG, PNG, WebP, or GIF image' };
     }
 
     if (file.size > maxSize) {
-      return { valid: false, error: 'Image size must be less than 5MB' };
+      return { valid: false, error: 'Image size must be less than 10MB' };
     }
 
     return { valid: true };

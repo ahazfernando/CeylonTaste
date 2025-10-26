@@ -20,7 +20,8 @@
     "seed:products": "node server/scripts/seed-products.js",
     "seed:categories": "node server/scripts/seed-categories.js",
     "migrate:firebase": "node server/scripts/migrate-to-firebase.js",
-    "test:firebase": "./test-firebase-migration.sh"
+    "test:firebase": "./test-firebase-migration.sh",
+    "set:admin": "node server/scripts/set-admin-firebase.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -55,6 +56,7 @@
     "@tanstack/react-query": "^5.83.0",
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
+    "cloudinary": "^2.8.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "cookie-parser": "^1.4.7",
