@@ -1,4 +1,7 @@
-// Shared product management utilities
+// Shared product management utilities - Using Firebase
+import { collection, getDocs, getDoc, addDoc, updateDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
+import { db } from './firebase';
+
 export interface Product {
   id: string;
   name: string;
@@ -14,146 +17,145 @@ export interface Product {
   availability?: 'Available' | 'Unavailable' | 'In House Only' | 'Breakfast' | 'Lunch' | 'Dinner';
   status?: 'active' | 'inactive';
   createdAt?: string;
+  updatedAt?: string;
 }
 
-const API_BASE_URL = 'http://localhost:4000/api';
-
-// API service for MongoDB integration
+// Firebase service for products
 export const productService = {
-  // Get all products
+  // Get all products from Firebase
   getAllProducts: async (): Promise<Product[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/products`);
-      if (!response.ok) throw new Error('Failed to fetch products');
-      const products = await response.json();
-      return products.map((product: any) => ({
-        ...product,
-        id: product._id || product.id, // Handle both MongoDB and Firebase formats
-      }));
+      const productsRef = collection(db, 'products');
+      const snapshot = await getDocs(productsRef);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        rating: 0,
+        reviewCount: 0,
+        ...doc.data()
+      } as Product));
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error('Error fetching products from Firebase:', error);
       return [];
     }
   },
 
-  // Get products by category
+  // Get products by category from Firebase
   getProductsByCategory: async (category: string): Promise<Product[]> => {
     try {
-      const url = category === "All" 
-        ? `${API_BASE_URL}/products`
-        : `${API_BASE_URL}/products?category=${encodeURIComponent(category)}`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch products');
-      const products = await response.json();
-      return products.map((product: any) => ({
-        ...product,
-        id: product._id || product.id, // Handle both MongoDB and Firebase formats
-      }));
+      const productsRef = collection(db, 'products');
+      const q = category === "All" 
+        ? productsRef
+        : query(productsRef, where('category', '==', category));
+      
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        rating: 0,
+        reviewCount: 0,
+        ...doc.data()
+      } as Product));
     } catch (error) {
-      console.error('Error fetching products by category:', error);
+      console.error('Error fetching products by category from Firebase:', error);
       return [];
     }
   },
 
-  // Add new product
-  addProduct: async (productData: Omit<Product, 'id' | 'rating' | 'reviewCount'>): Promise<Product | null> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/products`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(productData),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create product');
-      }
-      
-      const product = await response.json();
-      return {
-        ...product,
-        id: product._id || product.id, // Handle both MongoDB and Firebase formats
-      };
-    } catch (error) {
-      console.error('Error creating product:', error);
-      throw error;
-    }
-  },
-
-  // Update product
-  updateProduct: async (id: string, updates: Partial<Product>): Promise<Product | null> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/products/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update product');
-      }
-      
-      const product = await response.json();
-      return {
-        ...product,
-        id: product._id || product.id, // Handle both MongoDB and Firebase formats
-      };
-    } catch (error) {
-      console.error('Error updating product:', error);
-      throw error;
-    }
-  },
-
-  // Delete product
-  deleteProduct: async (id: string): Promise<boolean> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/products/${id}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete product');
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      throw error;
-    }
-  },
-
-  // Get product by ID
+  // Get single product from Firebase
   getProductById: async (id: string): Promise<Product | null> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/products/${id}`);
-      if (!response.ok) throw new Error('Failed to fetch product');
-      const product = await response.json();
-      return {
-        ...product,
-        id: product._id || product.id, // Handle both MongoDB and Firebase formats
-      };
+      const productRef = doc(db, 'products', id);
+      const productSnap = await getDoc(productRef);
+      
+      if (productSnap.exists()) {
+        return {
+          id: productSnap.id,
+          rating: 0,
+          reviewCount: 0,
+          ...productSnap.data()
+        } as Product;
+      }
+      return null;
     } catch (error) {
-      console.error('Error fetching product:', error);
+      console.error('Error fetching product from Firebase:', error);
       return null;
     }
   },
 
-  // Get all categories from the categories collection
+  // Add new product to Firebase
+  addProduct: async (productData: Omit<Product, 'id'>): Promise<Product | null> => {
+    try {
+      const productsRef = collection(db, 'products');
+      const docRef = await addDoc(productsRef, {
+        ...productData,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      
+      const productSnap = await getDoc(docRef);
+      if (productSnap.exists()) {
+        return {
+          id: productSnap.id,
+          ...productSnap.data()
+        } as Product;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error adding product to Firebase:', error);
+      throw error;
+    }
+  },
+
+  // Update product in Firebase
+  updateProduct: async (id: string, updates: Partial<Product>): Promise<Product | null> => {
+    try {
+      const productRef = doc(db, 'products', id);
+      await updateDoc(productRef, {
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      });
+      
+      const productSnap = await getDoc(productRef);
+      if (productSnap.exists()) {
+        return {
+          id: productSnap.id,
+          ...productSnap.data()
+        } as Product;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error updating product in Firebase:', error);
+      throw error;
+    }
+  },
+
+  // Delete product from Firebase
+  deleteProduct: async (id: string): Promise<boolean> => {
+    try {
+      const productRef = doc(db, 'products', id);
+      await deleteDoc(productRef);
+      return true;
+    } catch (error) {
+      console.error('Error deleting product from Firebase:', error);
+      throw error;
+    }
+  },
+
+  // Get all categories from Firebase
   getCategories: async (): Promise<string[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/categories`);
-      if (!response.ok) throw new Error('Failed to fetch categories');
-      const data = await response.json();
-      return data.categories.map((cat: any) => cat.name);
+      const categoriesRef = collection(db, 'categories');
+      const snapshot = await getDocs(categoriesRef);
+      return snapshot.docs.map(doc => doc.data().name as string);
     } catch (error) {
-      console.error('Error fetching categories:', error);
-      return [];
+      console.error('Error fetching categories from Firebase:', error);
+      // Fallback: get unique categories from products
+      try {
+        const products = await productService.getAllProducts();
+        return Array.from(new Set(products.map(p => p.category)));
+      } catch (err) {
+        console.error('Error getting categories from products:', err);
+        return [];
+      }
     }
   },
 };
