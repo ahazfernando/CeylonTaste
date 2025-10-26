@@ -144,21 +144,27 @@ export function TopProductsChart() {
         <div className="space-y-4">
           {/* Product List */}
           <div className="space-y-2">
-            {data.map((product, index) => (
-              <div key={product.name} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
-                <div className="flex items-center gap-2">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
-                    style={{ backgroundColor: chartConfig[`product${index + 1}` as keyof typeof chartConfig]?.color || `hsl(${index * 60} 45% 65%)` }}
-                  />
-                  <span className="font-medium">{product.name}</span>
+            {data.map((product, index) => {
+              const productKey = `product${index + 1}` as keyof typeof chartConfig;
+              const productConfig = chartConfig[productKey];
+              const color = productConfig && 'color' in productConfig ? productConfig.color : `hsl(${index * 60} 45% 65%)`;
+              
+              return (
+                <div key={product.name} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-3 h-3 rounded-full" 
+                      style={{ backgroundColor: color }}
+                    />
+                    <span className="font-medium">{product.name}</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-primary">{product.totalSold} units</div>
+                    <div className="text-xs text-muted-foreground">LKR {product.totalRevenue.toLocaleString()}</div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="font-bold text-primary">{product.totalSold} units</div>
-                  <div className="text-xs text-muted-foreground">LKR {product.totalRevenue.toLocaleString()}</div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           
           {/* Pie Chart */}
