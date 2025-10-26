@@ -1,13 +1,10 @@
-"use client";
-
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { CartProvider } from "@/contexts/CartContext";
+import { Providers } from "./providers";
 import "./globals.css";
 
-const queryClient = new QueryClient();
+export const metadata = {
+  title: "Ceylon Taste",
+  description: "Authentic Sri Lankan Food & Beverages",
+};
 
 export default function RootLayout({
   children,
@@ -25,15 +22,7 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <QueryClientProvider client={queryClient}>
-          <CartProvider>
-            <TooltipProvider>
-              {children}
-              <Toaster />
-              <Sonner />
-            </TooltipProvider>
-          </CartProvider>
-        </QueryClientProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
