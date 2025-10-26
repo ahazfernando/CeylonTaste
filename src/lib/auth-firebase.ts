@@ -49,7 +49,7 @@ export class FirebaseAuthService {
       return {
         id: user.uid,
         ...userData
-      };
+      } as User;
     } catch (error) {
       console.error('Sign up error:', error);
       throw error;

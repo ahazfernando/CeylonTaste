@@ -13,6 +13,7 @@ export interface Product {
   image: string;
   availability?: 'Available' | 'Unavailable' | 'In House Only' | 'Breakfast' | 'Lunch' | 'Dinner';
   status?: 'active' | 'inactive';
+  createdAt?: string;
 }
 
 const API_BASE_URL = 'http://localhost:4000/api';
