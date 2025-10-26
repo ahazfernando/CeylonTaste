@@ -13,6 +13,7 @@ import Image from "next/image";
 import primaryLogo from "@/assets/Home/CeylonTaste-Primary-2.png";
 import loginCouple from "@/assets/Login/login-couple.jpg";
 import loginFamily from "@/assets/Login/login-family.jpg";
+import { getApiBaseUrl } from "@/lib/api";
 
 export default function SignUp() {
   const router = useRouter();
@@ -43,7 +44,11 @@ export default function SignUp() {
         return;
       }
       setLoading(true);
-      const res = await fetch("http://localhost:4000/api/auth/signup", {
+      const apiUrl = getApiBaseUrl();
+      if (!apiUrl) {
+        throw new Error("API URL not configured");
+      }
+      const res = await fetch(`${apiUrl}/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
