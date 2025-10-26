@@ -88,7 +88,7 @@ export function Navigation({ cartItemCount }: NavigationProps) {
             >
               <Link href="/products">Products</Link>
             </Button>
-            <Button 
+            {/* <Button 
               variant="ghost" 
               className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 font-medium px-4" 
               asChild
@@ -101,7 +101,7 @@ export function Navigation({ cartItemCount }: NavigationProps) {
               asChild
             >
               <Link href="/services">Services</Link>
-            </Button>
+            </Button> */}
             {currentUser?.role === "admin" && (
               <Button 
                 variant="ghost" 
@@ -189,7 +189,7 @@ export function Navigation({ cartItemCount }: NavigationProps) {
               >
                 <Link href="/products">Products</Link>
               </Button>
-              <Button 
+              {/* <Button 
                 variant="ghost" 
                 className="w-full justify-start text-amber-900 hover:text-amber-700 hover:bg-amber-100/50" 
                 asChild
@@ -202,7 +202,7 @@ export function Navigation({ cartItemCount }: NavigationProps) {
                 asChild
               >
                 <Link href="/services">Services</Link>
-              </Button>
+              </Button> */}
               {currentUser?.role === "admin" && (
                 <Button 
                   variant="ghost" 
