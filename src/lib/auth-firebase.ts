@@ -140,105 +140,76 @@ export class FirebaseAuthService {
   }
 }
 
-// Legacy API service for compatibility during migration
+// API service wrapper - uses Firebase authentication
 export const apiAuthService = {
   signUp: async (email: string, password: string, name: string): Promise<{ user: User; token: string }> => {
     try {
-      const response = await fetch('http://localhost:4000/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ email, password, name }),
-      });
-
-      if (!response.ok) {
-        let errorMessage = 'Signup failed';
-        try {
-          const errorData = await response.json();
-          console.error('Signup API error response:', errorData);
-          errorMessage = errorData.error || errorData.message || errorMessage;
-          
-          // Handle validation errors
-          if (errorData.errors && Array.isArray(errorData.errors)) {
-            errorMessage = errorData.errors.map((e: any) => e.msg || e.message).join(', ');
-          }
-        } catch (e) {
-          console.error('Failed to parse error response:', e);
-          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-        }
-        throw new Error(errorMessage);
+      const user = await FirebaseAuthService.signUp(email, password, name);
+      // Store user in localStorage for compatibility
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('tt_user', JSON.stringify(user));
+        localStorage.setItem('tt_token', 'firebase-token'); // Firebase handles auth internally
       }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('API signup error:', error);
-      throw error;
+      return { user, token: 'firebase-token' };
+    } catch (error: any) {
+      console.error('Signup error:', error);
+      throw new Error(error.message || 'Signup failed');
     }
   },
 
   signIn: async (email: string, password: string): Promise<{ user: User; token: string }> => {
     try {
-      const response = await fetch('http://localhost:4000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        let errorMessage = 'Login failed';
-        try {
-          const errorData = await response.json();
-          console.error('Login API error response:', errorData);
-          errorMessage = errorData.error || errorData.message || errorMessage;
-        } catch (e) {
-          console.error('Failed to parse error response:', e);
-          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-        }
-        throw new Error(errorMessage);
+      const user = await FirebaseAuthService.signIn(email, password);
+      // Store user in localStorage for compatibility
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('tt_user', JSON.stringify(user));
+        localStorage.setItem('tt_token', 'firebase-token'); // Firebase handles auth internally
       }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('API login error:', error);
-      throw error;
+      return { user, token: 'firebase-token' };
+    } catch (error: any) {
+      console.error('Login error:', error);
+      throw new Error(error.message || 'Login failed');
     }
   },
 
   signOut: async (): Promise<void> => {
     try {
-      await fetch('http://localhost:4000/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
+      await FirebaseAuthService.signOut();
+      // Clear localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('tt_user');
+        localStorage.removeItem('tt_token');
+      }
     } catch (error) {
-      console.error('API logout error:', error);
+      console.error('Logout error:', error);
       throw error;
     }
   },
 
   getCurrentUser: async (): Promise<User | null> => {
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
-      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+      const currentUser = FirebaseAuthService.getCurrentUser();
+      if (!currentUser) {
+        // Check localStorage as fallback
+        if (typeof window !== 'undefined') {
+          const userStr = localStorage.getItem('tt_user');
+          if (userStr) {
+            return JSON.parse(userStr);
+          }
+        }
+        return null;
+      }
       
-      const response = await fetch('http://localhost:4000/api/auth/me', {
-        credentials: 'include',
-        headers
-      });
-
-      if (!response.ok) {
+      // Get user data from Firestore
+      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+      if (!userDoc.exists()) {
         return null;
       }
 
-      const data = await response.json();
-      return data.user;
+      return {
+        id: currentUser.uid,
+        ...userDoc.data()
+      } as User;
     } catch (error) {
       console.error('Get current user error:', error);
       return null;
@@ -247,26 +218,19 @@ export const apiAuthService = {
 
   updateProfile: async (updateData: Partial<User>): Promise<User> => {
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
-      };
-
-      const response = await fetch('http://localhost:4000/api/auth/profile', {
-        method: 'PUT',
-        headers,
-        credentials: 'include',
-        body: JSON.stringify(updateData)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update profile');
+      const currentUser = FirebaseAuthService.getCurrentUser();
+      if (!currentUser) {
+        throw new Error('User not authenticated');
       }
 
-      const data = await response.json();
-      return data.user;
+      const updatedUser = await FirebaseAuthService.updateProfile(currentUser.uid, updateData);
+      
+      // Update localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('tt_user', JSON.stringify(updatedUser));
+      }
+      
+      return updatedUser;
     } catch (error) {
       console.error('Update profile error:', error);
       throw error;
