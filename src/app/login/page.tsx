@@ -14,6 +14,21 @@ import primaryLogo from "@/assets/Home/CeylonTaste-Primary-2.png";
 import loginCouple from "@/assets/Login/login-couple.jpg";
 import loginFamily from "@/assets/Login/login-family.jpg";
 
+const carouselImages = [
+  {
+    src: loginCouple,
+    alt: "Couple enjoying Ceylon Taste",
+    title: "Share the Taste",
+    description: "Experience authentic Sri Lankan flavors with your loved ones"
+  },
+  {
+    src: loginFamily,
+    alt: "Family enjoying Ceylon Taste",
+    title: "Family Traditions",
+    description: "Bringing generations together through traditional recipes"
+  }
+];
+
 export default function Login() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
@@ -55,28 +70,13 @@ export default function Login() {
     }
   }
 
-  const carouselImages = [
-    {
-      src: loginCouple,
-      alt: "Couple enjoying Ceylon Taste",
-      title: "Share the Taste",
-      description: "Experience authentic Sri Lankan flavors with your loved ones"
-    },
-    {
-      src: loginFamily,
-      alt: "Family enjoying Ceylon Taste",
-      title: "Family Traditions",
-      description: "Bringing generations together through traditional recipes"
-    }
-  ];
-
   // Auto-advance carousel
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [carouselImages.length]);
+  }, []);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
