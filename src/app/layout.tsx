@@ -1,5 +1,6 @@
 import { Providers } from "./providers";
 import "./globals.css";
+import { Footer } from "@/components/layout/footer";
 
 export const metadata = {
   title: "Ceylon Taste",
@@ -22,7 +23,10 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <Footer />
+        </Providers>
       </body>
     </html>
   );

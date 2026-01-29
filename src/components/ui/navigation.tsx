@@ -18,13 +18,13 @@ export function Navigation({ cartItemCount }: NavigationProps) {
   const { getTotalItems, clearCart } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<null | { id: string; role: string; name?: string; email?: string }>(null);
-  
+
   // Use cart context count if no prop is provided
   const actualCartCount = cartItemCount !== undefined ? cartItemCount : getTotalItems();
 
   useEffect(() => {
     let cancelled = false;
-    
+
     // Check localStorage for user
     const userStr = typeof window !== 'undefined' ? localStorage.getItem('tt_user') : null;
     if (userStr) {
@@ -37,7 +37,7 @@ export function Navigation({ cartItemCount }: NavigationProps) {
     } else {
       if (!cancelled) setCurrentUser(null);
     }
-    
+
     return () => {
       cancelled = true;
     };
@@ -46,8 +46,8 @@ export function Navigation({ cartItemCount }: NavigationProps) {
   async function handleLogout() {
     try {
       // Clear Firebase session
-      try { localStorage.removeItem('tt_user'); } catch {}
-      try { localStorage.removeItem('tt_token'); } catch {}
+      try { localStorage.removeItem('tt_user'); } catch { }
+      try { localStorage.removeItem('tt_token'); } catch { }
     } finally {
       setCurrentUser(null);
       clearCart(); // Clear cart on logout
@@ -62,50 +62,50 @@ export function Navigation({ cartItemCount }: NavigationProps) {
           {/* Logo */}
           <div className="flex items-center gap-3 flex-shrink-0">
             <Link href="/" className="flex items-center gap-2">
-<Image
-  src={primaryLogo.src}
-  alt="CeylonTaste Logo"
-  width={80}
-  height={80}
-  className="h-20 w-auto"
-/>
+              <Image
+                src={primaryLogo.src}
+                alt="CeylonTaste Logo"
+                width={80}
+                height={80}
+                className="h-20 w-auto"
+              />
             </Link>
           </div>
 
           {/* Desktop Navigation - Centered */}
           <div className="hidden md:flex items-center gap-8 flex-1 justify-center">
-            <Button 
-              variant="ghost" 
-              className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 font-medium px-4" 
+            <Button
+              variant="ghost"
+              className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 font-medium px-4"
               asChild
             >
               <Link href="/">Home</Link>
             </Button>
-            <Button 
-              variant="ghost" 
-              className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 font-medium px-4" 
+            <Button
+              variant="ghost"
+              className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 font-medium px-4"
               asChild
             >
               <Link href="/products">Products</Link>
             </Button>
-            {/* <Button 
-              variant="ghost" 
-              className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 font-medium px-4" 
+            <Button
+              variant="ghost"
+              className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 font-medium px-4"
               asChild
             >
               <Link href="/about">About</Link>
             </Button>
-            <Button 
-              variant="ghost" 
-              className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 font-medium px-4" 
+            <Button
+              variant="ghost"
+              className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 font-medium px-4"
               asChild
             >
               <Link href="/services">Services</Link>
-            </Button> */}
+            </Button>
             {currentUser?.role === "admin" && (
-              <Button 
-                variant="ghost" 
-                className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 font-medium flex items-center gap-1 px-4" 
+              <Button
+                variant="ghost"
+                className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 font-medium flex items-center gap-1 px-4"
                 asChild
               >
                 <Link href="/admin/dashboard">
@@ -118,10 +118,10 @@ export function Navigation({ cartItemCount }: NavigationProps) {
 
           {/* Desktop Actions - Right aligned */}
           <div className="hidden md:flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="relative text-amber-900 hover:text-amber-700 hover:bg-amber-100/50" 
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative text-amber-900 hover:text-amber-700 hover:bg-amber-100/50"
               asChild
             >
               <Link href="/cart">
@@ -133,10 +133,10 @@ export function Navigation({ cartItemCount }: NavigationProps) {
                 )}
               </Link>
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50" 
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50"
               asChild
             >
               <Link href="/profile">
@@ -144,15 +144,15 @@ export function Navigation({ cartItemCount }: NavigationProps) {
               </Link>
             </Button>
             {currentUser ? (
-              <Button 
-                className="bg-amber-800 text-white hover:bg-amber-700 px-6 py-2 rounded-full font-medium shadow-sm ml-2" 
+              <Button
+                className="bg-amber-800 text-white hover:bg-amber-700 px-6 py-2 rounded-full font-medium shadow-sm ml-2"
                 onClick={handleLogout}
               >
                 Logout
               </Button>
             ) : (
-              <Button 
-                className="bg-amber-800 text-white hover:bg-amber-700 px-6 py-2 rounded-full font-medium shadow-sm ml-2" 
+              <Button
+                className="bg-amber-800 text-white hover:bg-amber-700 px-6 py-2 rounded-full font-medium shadow-sm ml-2"
                 asChild
               >
                 <Link href="/login">Login</Link>
@@ -175,38 +175,38 @@ export function Navigation({ cartItemCount }: NavigationProps) {
         {isMenuOpen && (
           <div className="md:hidden border-t border-amber-200/30" style={{ backgroundColor: '#EFE2D1' }}>
             <div className="mx-4 py-4 space-y-2">
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-amber-900 hover:text-amber-700 hover:bg-amber-100/50" 
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-amber-900 hover:text-amber-700 hover:bg-amber-100/50"
                 asChild
               >
                 <Link href="/">Home</Link>
               </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-amber-900 hover:text-amber-700 hover:bg-amber-100/50" 
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-amber-900 hover:text-amber-700 hover:bg-amber-100/50"
                 asChild
               >
                 <Link href="/products">Products</Link>
               </Button>
-              {/* <Button 
-                variant="ghost" 
-                className="w-full justify-start text-amber-900 hover:text-amber-700 hover:bg-amber-100/50" 
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-amber-900 hover:text-amber-700 hover:bg-amber-100/50"
                 asChild
               >
                 <Link href="/about">About</Link>
               </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-amber-900 hover:text-amber-700 hover:bg-amber-100/50" 
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-amber-900 hover:text-amber-700 hover:bg-amber-100/50"
                 asChild
               >
                 <Link href="/services">Services</Link>
-              </Button> */}
+              </Button>
               {currentUser?.role === "admin" && (
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-start text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 flex items-center gap-2" 
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 flex items-center gap-2"
                   asChild
                 >
                   <Link href="/admin/dashboard">
@@ -216,10 +216,10 @@ export function Navigation({ cartItemCount }: NavigationProps) {
                 </Button>
               )}
               <div className="flex items-center gap-3 pt-4 border-t border-amber-200/30">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="relative text-amber-900 hover:text-amber-700 hover:bg-amber-100/50" 
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative text-amber-900 hover:text-amber-700 hover:bg-amber-100/50"
                   asChild
                 >
                   <Link href="/cart">
@@ -231,10 +231,10 @@ export function Navigation({ cartItemCount }: NavigationProps) {
                     )}
                   </Link>
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50" 
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50"
                   asChild
                 >
                   <Link href="/profile">
@@ -242,15 +242,15 @@ export function Navigation({ cartItemCount }: NavigationProps) {
                   </Link>
                 </Button>
                 {currentUser ? (
-                  <Button 
-                    className="bg-amber-800 text-white hover:bg-amber-700 flex-1 rounded-full font-medium" 
+                  <Button
+                    className="bg-amber-800 text-white hover:bg-amber-700 flex-1 rounded-full font-medium"
                     onClick={handleLogout}
                   >
                     Logout
                   </Button>
                 ) : (
-                  <Button 
-                    className="bg-amber-800 text-white hover:bg-amber-700 flex-1 rounded-full font-medium" 
+                  <Button
+                    className="bg-amber-800 text-white hover:bg-amber-700 flex-1 rounded-full font-medium"
                     asChild
                   >
                     <Link href="/login">Login</Link>
