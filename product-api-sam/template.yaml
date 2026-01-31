@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Serverless Product API
+
+Globals:
+  Function:
+    Timeout: 3
+    LoggingConfig:
+      LogFormat: JSON
+
+Resources:
+  ProductFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: handlers/product.handler
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      Events:
+        ProductApi:
+          Type: Api
+          Properties:
+            Path: /products
+            Method: get
+
+Outputs:
+  ProductApiUrl:
+    Description: "API Gateway endpoint URL for Prod stage for Product function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/products/"
+  ProductFunction:
+    Description: "Product Lambda Function ARN"
+    Value: !GetAtt ProductFunction.Arn

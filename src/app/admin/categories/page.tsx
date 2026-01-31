@@ -10,10 +10,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, Search, Edit, Trash2, Tags } from "lucide-react";
 import { useState, useEffect } from "react";
 import { CategoryListSkeleton } from "@/components/skeletons/category-skeleton";
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-
-type Category = { id: string; name: string; description: string };
+import { getCategories, createCategory, updateCategory, deleteCategory } from "@/lib/categories-api";
+import type { Category } from "@/lib/categories-api";
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -25,6 +23,8 @@ export default function AdminCategoriesPage() {
   const [editFormData, setEditFormData] = useState({ name: "", description: "" });
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [createLoading, setCreateLoading] = useState(false);
 
   const filteredCategories = categories.filter(category =>
     category?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -34,14 +34,8 @@ export default function AdminCategoriesPage() {
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const categoriesRef = collection(db, 'categories');
-        const snapshot = await getDocs(categoriesRef);
-        const rows: Category[] = snapshot.docs.map(doc => ({
-          id: doc.id,
-          name: doc.data().name || '',
-          description: doc.data().description || ''
-        }));
-        setCategories(rows);
+        const rows = await getCategories();
+        setCategories(rows.map((c) => ({ id: c.id, name: c.name, description: c.description ?? '' })));
       } catch (error) {
         console.error('Error loading categories:', error);
       } finally {
@@ -61,9 +55,8 @@ export default function AdminCategoriesPage() {
 
   async function confirmDelete() {
     if (!categoryToDelete) return;
-    
     try {
-      await deleteDoc(doc(db, 'categories', categoryToDelete.id));
+      await deleteCategory(categoryToDelete.id);
       setCategories((prev) => prev.filter((c) => c.id !== categoryToDelete.id));
     } catch (error) {
       console.error('Error deleting category:', error);
@@ -85,20 +78,18 @@ export default function AdminCategoriesPage() {
   async function handleEditSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!editingCategory || !editFormData.name.trim()) return;
-    
     try {
-      await updateDoc(doc(db, 'categories', editingCategory.id), {
+      await updateCategory(editingCategory.id, {
         name: editFormData.name.trim(),
         description: editFormData.description.trim(),
-        updatedAt: new Date().toISOString()
       });
-      
-      setCategories((prev) => prev.map((c) => 
-        c.id === editingCategory.id 
-          ? { id: editingCategory.id, name: editFormData.name.trim(), description: editFormData.description.trim() } 
-          : c
-      ));
-      
+      setCategories((prev) =>
+        prev.map((c) =>
+          c.id === editingCategory.id
+            ? { id: editingCategory.id, name: editFormData.name.trim(), description: editFormData.description.trim() }
+            : c
+        )
+      );
       setIsEditDialogOpen(false);
       setEditingCategory(null);
       setEditFormData({ name: "", description: "" });
@@ -115,7 +106,7 @@ export default function AdminCategoriesPage() {
                 <p className="text-muted-foreground">Organize your products into categories</p>
               </div>
 
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setCreateError(null); }}>
                 <DialogTrigger asChild>
                   <Button className="bg-amber-800 hover:bg-amber-700 text-white shadow-lg font-semibold">
                     <Plus className="h-4 w-4 mr-2 text-white" />
@@ -132,25 +123,24 @@ export default function AdminCategoriesPage() {
                   <div className="space-y-4 py-4">
                     <form id="createCategoryForm" onSubmit={async (e) => {
                       e.preventDefault();
+                      setCreateError(null);
                       const form = e.currentTarget as HTMLFormElement;
                       const formData = new FormData(form);
                       const name = String(formData.get('categoryName') || '').trim();
                       const description = String(formData.get('categoryDescription') || '').trim();
                       if (!name) return;
-                      
+                      setCreateLoading(true);
                       try {
-                        const docRef = await addDoc(collection(db, 'categories'), {
-                          name,
-                          description,
-                          createdAt: new Date().toISOString(),
-                          updatedAt: new Date().toISOString()
-                        });
-                        
-                        setCategories((prev) => [{ id: docRef.id, name, description }, ...prev]);
+                        const created = await createCategory({ name, description });
+                        setCategories((prev) => [{ id: created.id, name: created.name, description: created.description ?? '' }, ...prev]);
                         setIsDialogOpen(false);
                         form.reset();
                       } catch (error) {
                         console.error('Error creating category:', error);
+                        const msg = error instanceof Error ? error.message : 'Failed to create category. Check the API URL and CORS (see README).';
+                        setCreateError(msg);
+                      } finally {
+                        setCreateLoading(false);
                       }
                     }}>
                     <div className="space-y-2">
@@ -161,9 +151,14 @@ export default function AdminCategoriesPage() {
                       <Label htmlFor="categoryDescription" className="text-foreground">Description</Label>
                       <Textarea name="categoryDescription" id="categoryDescription" placeholder="Enter category description" className="border-border" />
                     </div>
+                    {createError && (
+                      <p className="text-sm text-red-500" role="alert">{createError}</p>
+                    )}
                     <div className="flex justify-end gap-3 pt-4">
                       <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="border-border">Cancel</Button>
-                      <Button type="submit" form="createCategoryForm" className="bg-amber-800 hover:bg-amber-700 text-white shadow-lg font-semibold">Create Category</Button>
+                      <Button type="submit" form="createCategoryForm" disabled={createLoading} className="bg-amber-800 hover:bg-amber-700 text-white shadow-lg font-semibold">
+                        {createLoading ? "Creating…" : "Create Category"}
+                      </Button>
                     </div>
                     </form>
                   </div>

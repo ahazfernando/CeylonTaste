@@ -116,7 +116,7 @@ function FeaturedDishesContent({ dishes }: { dishes: Product[] }) {
                                                 animate={{ scale: isActive ? 1 : 0 }}
                                                 className="absolute top-6 right-6 bg-white/90 backdrop-blur-md text-amber-800 px-4 py-2 rounded-full font-serif text-lg font-bold shadow-lg border border-amber-100"
                                             >
-                                                ${dish.price}
+                                                LKR {dish.price}
                                             </motion.div>
                                         </div>
                                     </motion.div>

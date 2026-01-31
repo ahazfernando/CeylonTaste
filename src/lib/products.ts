@@ -1,191 +1,107 @@
-// Shared product management utilities - Using Firebase
-import { collection, getDocs, getDoc, addDoc, updateDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
-import { db } from './firebase';
+/**
+ * Product management — all product data from AWS API (no Firebase).
+ */
+import {
+  Product,
+  getProducts,
+  getProductById as fetchProductById,
+  createProduct,
+  ApiError,
+} from './api';
 
-export interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  originalPrice?: number;
-  rating: number;
-  reviewCount: number;
-  category: string;
-  isNewProduct?: boolean;
-  isFeatured?: boolean;
-  image: string;
-  availability?: 'Available' | 'Unavailable' | 'In House Only' | 'Breakfast' | 'Lunch' | 'Dinner';
-  status?: 'active' | 'inactive';
-  createdAt?: string;
-  updatedAt?: string;
-}
+export type { Product };
 
-// Firebase service for products
+/** Product service backed by AWS API Gateway + Lambda */
 export const productService = {
-  // Get all products from Firebase
-  getAllProducts: async (): Promise<Product[]> => {
+  async getAllProducts(): Promise<Product[]> {
+    return getProducts();
+  },
+
+  async getProductsByCategory(category: string): Promise<Product[]> {
+    const all = await getProducts();
+    if (category === 'All') return all;
+    return all.filter((p) => (p.category || '').toLowerCase() === category.toLowerCase());
+  },
+
+  async getProductById(id: string): Promise<Product | null> {
     try {
-      const productsRef = collection(db, 'products');
-      const snapshot = await getDocs(productsRef);
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        rating: 0,
-        reviewCount: 0,
-        ...doc.data()
-      } as Product));
-    } catch (error) {
-      console.error('Error fetching products from Firebase:', error);
-      return [];
+      return await fetchProductById(id);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) return null;
+      throw err;
     }
   },
 
-  // Get products by category from Firebase
-  getProductsByCategory: async (category: string): Promise<Product[]> => {
+  async addProduct(data: Omit<Product, 'id'>): Promise<Product | null> {
+    const id = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `prod-${Date.now()}`;
+    const product: Product = { id, name: data.name, ...data };
+    return createProduct(product);
+  },
+
+  async updateProduct(_id: string, _updates: Partial<Product>): Promise<Product | null> {
+    throw new Error('Update product is not supported by the current API. Use AWS API Gateway/Lambda to add PATCH/DELETE if needed.');
+  },
+
+  async deleteProduct(_id: string): Promise<boolean> {
+    throw new Error('Delete product is not supported by the current API. Use AWS API Gateway/Lambda to add DELETE if needed.');
+  },
+
+  async getCategories(): Promise<string[]> {
     try {
-      const productsRef = collection(db, 'products');
-      const q = category === "All" 
-        ? productsRef
-        : query(productsRef, where('category', '==', category));
-      
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        rating: 0,
-        reviewCount: 0,
-        ...doc.data()
-      } as Product));
-    } catch (error) {
-      console.error('Error fetching products by category from Firebase:', error);
-      return [];
+      const { getCategories: fetchCategories } = await import('./categories-api');
+      const list = await fetchCategories();
+      return list.map((c) => c.name);
+    } catch {
+      const products = await getProducts();
+      const set = new Set(products.map((p) => p.category).filter(Boolean) as string[]);
+      return Array.from(set);
     }
   },
 
-  // Get single product from Firebase
-  getProductById: async (id: string): Promise<Product | null> => {
+  /** Full category list for admin (id, name, description) — from AWS categories API */
+  async getCategoriesList(): Promise<{ id: string; name: string; description: string }[]> {
     try {
-      const productRef = doc(db, 'products', id);
-      const productSnap = await getDoc(productRef);
-      
-      if (productSnap.exists()) {
-        return {
-          id: productSnap.id,
-          rating: 0,
-          reviewCount: 0,
-          ...productSnap.data()
-        } as Product;
+      const { getCategories } = await import('./categories-api');
+      const list = await getCategories();
+      return list.map((c) => ({
+        id: c.id,
+        name: c.name,
+        description: c.description ?? '',
+      }));
+    } catch {
+      const products = await getProducts();
+      const seen = new Set<string>();
+      const list: { id: string; name: string; description: string }[] = [];
+      for (const p of products) {
+        const name = (p.category || '').trim();
+        if (name && !seen.has(name)) {
+          seen.add(name);
+          list.push({ id: `cat-${list.length}`, name, description: name });
+        }
       }
-      return null;
-    } catch (error) {
-      console.error('Error fetching product from Firebase:', error);
-      return null;
-    }
-  },
-
-  // Add new product to Firebase
-  addProduct: async (productData: Omit<Product, 'id'>): Promise<Product | null> => {
-    try {
-      const productsRef = collection(db, 'products');
-      const docRef = await addDoc(productsRef, {
-        ...productData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-      
-      const productSnap = await getDoc(docRef);
-      if (productSnap.exists()) {
-        return {
-          id: productSnap.id,
-          ...productSnap.data()
-        } as Product;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error adding product to Firebase:', error);
-      throw error;
-    }
-  },
-
-  // Update product in Firebase
-  updateProduct: async (id: string, updates: Partial<Product>): Promise<Product | null> => {
-    try {
-      const productRef = doc(db, 'products', id);
-      await updateDoc(productRef, {
-        ...updates,
-        updatedAt: new Date().toISOString(),
-      });
-      
-      const productSnap = await getDoc(productRef);
-      if (productSnap.exists()) {
-        return {
-          id: productSnap.id,
-          ...productSnap.data()
-        } as Product;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error updating product in Firebase:', error);
-      throw error;
-    }
-  },
-
-  // Delete product from Firebase
-  deleteProduct: async (id: string): Promise<boolean> => {
-    try {
-      const productRef = doc(db, 'products', id);
-      await deleteDoc(productRef);
-      return true;
-    } catch (error) {
-      console.error('Error deleting product from Firebase:', error);
-      throw error;
-    }
-  },
-
-  // Get all categories from Firebase
-  getCategories: async (): Promise<string[]> => {
-    try {
-      const categoriesRef = collection(db, 'categories');
-      const snapshot = await getDocs(categoriesRef);
-      return snapshot.docs.map(doc => doc.data().name as string);
-    } catch (error) {
-      console.error('Error fetching categories from Firebase:', error);
-      // Fallback: get unique categories from products
-      try {
-        const products = await productService.getAllProducts();
-        return Array.from(new Set(products.map(p => p.category)));
-      } catch (err) {
-        console.error('Error getting categories from products:', err);
-        return [];
-      }
+      return list;
     }
   },
 };
 
-// Image upload utility
+/** Image upload (Cloudinary) — unchanged */
 export const imageUploadService = {
-  // Upload image to Cloudinary
-  uploadImage: async (file: File): Promise<string> => {
-    try {
-      const { uploadImageToCloudinary } = await import('./cloudinary-client');
-      return await uploadImageToCloudinary(file);
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      throw error;
-    }
+  async uploadImage(file: File): Promise<string> {
+    const { uploadImageToCloudinary } = await import('./cloudinary-client');
+    return uploadImageToCloudinary(file);
   },
 
-  // Validate image file
-  validateImage: (file: File): { valid: boolean; error?: string } => {
-    const maxSize = 10 * 1024 * 1024; // 10MB (Cloudinary supports larger files)
+  validateImage(file: File): { valid: boolean; error?: string } {
+    const maxSize = 10 * 1024 * 1024;
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-
     if (!allowedTypes.includes(file.type)) {
       return { valid: false, error: 'Please upload a JPEG, PNG, WebP, or GIF image' };
     }
-
     if (file.size > maxSize) {
       return { valid: false, error: 'Image size must be less than 10MB' };
     }
-
     return { valid: true };
   },
 };

@@ -10,7 +10,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { User, Crown, ShoppingBag, Star, Calendar, MapPin, Plus, Edit } from "lucide-react";
+import Link from "next/link";
+import { User, Crown, ShoppingBag, Star, Calendar, MapPin, Plus, Edit, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // Order interface
@@ -72,13 +73,13 @@ export default function Profile() {
         // Get user data from localStorage (set by Firebase)
         const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
         const userStr = typeof window !== 'undefined' ? localStorage.getItem('tt_user') : null;
-        
+
         if (!token || !userStr) {
           throw new Error('User not authenticated');
         }
-        
+
         const userData = JSON.parse(userStr);
-        
+
         // Map Firebase user to the expected format
         setUser({
           id: userData.id || userData.uid,
@@ -88,10 +89,10 @@ export default function Profile() {
           createdAt: userData.createdAt || new Date().toISOString(),
           address: userData.address
         });
-        
+
         // Orders will be empty for now (you can implement Firestore orders later)
         setOrders([]);
-        
+
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load profile');
       } finally {
@@ -115,22 +116,36 @@ export default function Profile() {
     );
   }
 
-  if (error || !user) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-white">
         <Navigation />
-        <main className="container py-8">
-          <div className="text-center">
-            <p className="text-red-500">Error: {error || 'User not found'}</p>
+        <main className="container py-20">
+          <div className="max-w-md mx-auto text-center space-y-6">
+            <div className="bg-amber-50 w-20 h-20 mx-auto rounded-full flex items-center justify-center">
+              <Lock className="w-10 h-10 text-amber-600" />
+            </div>
+            <h1 className="text-3xl font-serif font-bold text-gray-900">Please Log In</h1>
+            <p className="text-muted-foreground text-lg">
+              Sign in to view your profile, track your orders, and manage your account settings.
+            </p>
+            <div className="flex gap-4 justify-center pt-4">
+              <Button asChild size="lg" className="w-full sm:w-auto">
+                <Link href="/login">Log In</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
+                <Link href="/signup">Create Account</Link>
+              </Button>
+            </div>
           </div>
         </main>
       </div>
     );
   }
 
-  const memberSince = user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { 
-    month: 'long', 
-    year: 'numeric' 
+  const memberSince = user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric'
   }) : 'Unknown';
 
   const totalOrders = orders.length;
@@ -153,7 +168,7 @@ export default function Profile() {
 
   const handleSaveAddress = async () => {
     if (!user) return;
-    
+
     // Validate required fields
     if (!addressForm.street || !addressForm.city || !addressForm.province || !addressForm.zipCode || !addressForm.phone) {
       toast({
@@ -163,9 +178,9 @@ export default function Profile() {
       });
       return;
     }
-    
+
     setSavingAddress(true);
-    
+
     try {
       // Update user address in localStorage
       const userStr = typeof window !== 'undefined' ? localStorage.getItem('tt_user') : null;
@@ -175,16 +190,16 @@ export default function Profile() {
           ...userData,
           address: addressForm
         };
-        
+
         // Save back to localStorage
         localStorage.setItem('tt_user', JSON.stringify(updatedUser));
-        
+
         // Update state
         setUser({
           ...user,
           address: addressForm
         });
-        
+
         setShowAddressForm(false);
         setAddressForm({
           street: "",
@@ -194,7 +209,7 @@ export default function Profile() {
           country: "Sri Lanka",
           phone: ""
         });
-        
+
         toast({
           title: "Success!",
           description: "Your address has been saved successfully.",
@@ -234,7 +249,7 @@ export default function Profile() {
                     {user.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
-                
+
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <h1 className="text-2xl font-bold">{user.name}</h1>
@@ -242,7 +257,7 @@ export default function Profile() {
                   <p className="text-muted-foreground mb-3">{user.email}</p>
                 </div>
               </div>
-              
+
               {/* Total Orders Card */}
               <div className="bg-white rounded-lg p-4 text-center min-w-[120px]">
                 <ShoppingBag className="w-6 h-6 mx-auto mb-2 text-primary" />
@@ -317,7 +332,7 @@ export default function Profile() {
                     <Input id="email" value={user.email} readOnly />
                   </div>
                 </div>
-                
+
                 <div>
                   <Label>User Address</Label>
                   {user.address ? (
@@ -325,8 +340,8 @@ export default function Profile() {
                       <div className="p-4 border rounded-lg bg-white">
                         <div className="flex justify-between items-start mb-2">
                           <h4 className="font-medium">Current Address</h4>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={handleEditAddress}
                           >
@@ -346,7 +361,7 @@ export default function Profile() {
                     <div className="text-center py-6 border-2 border-dashed border-muted-foreground/25 rounded-lg">
                       <MapPin className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                       <p className="text-muted-foreground mb-3">No address saved</p>
-                      <Button 
+                      <Button
                         variant="outline"
                         onClick={() => setShowAddressForm(true)}
                       >
@@ -416,14 +431,14 @@ export default function Profile() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button 
+                        <Button
                           onClick={handleSaveAddress}
                           disabled={savingAddress}
                         >
                           {savingAddress ? "Saving..." : "Save Address"}
                         </Button>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           onClick={() => setShowAddressForm(false)}
                           disabled={savingAddress}
                         >

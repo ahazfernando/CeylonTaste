@@ -48,37 +48,16 @@ const Products = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Load products and categories on component mount
+  // Load products and categories from AWS API on mount
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Load products
-        const productsData = await productService.getAllProducts();
+        const [productsData, categoriesList] = await Promise.all([
+          productService.getAllProducts(),
+          productService.getCategoriesList(),
+        ]);
         setProducts(productsData);
-
-        // Load categories from Firebase, fallback to unique product categories
-        try {
-          const { collection, getDocs } = await import('firebase/firestore');
-          const { db } = await import('@/lib/firebase');
-          const categoriesRef = collection(db, 'categories');
-          const snapshot = await getDocs(categoriesRef);
-          const categoriesList = snapshot.docs.map(doc => ({ 
-            id: doc.id, 
-            name: doc.data().name, 
-            description: doc.data().description || '' 
-          }));
-          setCategories(categoriesList);
-        } catch (error) {
-          console.log('Categories collection not found, using unique product categories');
-          // Fallback: get unique categories from products
-          const uniqueCategories = Array.from(new Set(productsData.map(p => p.category)));
-          const categoriesList = uniqueCategories.map((cat, index) => ({ 
-            id: `cat-${index}`, 
-            name: cat, 
-            description: cat 
-          }));
-          setCategories(categoriesList);
-        }
+        setCategories(categoriesList);
       } catch (error) {
         console.error('Failed to load data:', error);
         toast({

@@ -44,44 +44,35 @@ export default function Checkout() {
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
 
-  // Check authentication status
+  // Use same auth source as Navigation/cart (tt_user in localStorage) so logged-in users stay on checkout
   useEffect(() => {
-    let cancelled = false;
-    const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
-    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-    
-    fetch("http://localhost:4000/api/auth/me", { credentials: "include", headers })
-      .then(async (r) => (r.ok ? r.json() : Promise.reject()))
-      .then((data) => {
-        if (!cancelled) {
-          setCurrentUser(data?.user || null);
-          if (data?.user) {
-            // Pre-fill form with user data
-            setFormData(prev => ({
-              ...prev,
-              fullName: data.user.name || "",
-              email: data.user.email || "",
-              phone: data.user.address?.phone || "",
-              address: data.user.address?.street || "",
-              city: data.user.address?.city || "",
-              postalCode: data.user.address?.zipCode || ""
-            }));
-          }
-          setLoading(false);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setCurrentUser(null);
-          setLoading(false);
-          // Redirect to login if not authenticated
-          router.push('/login');
-        }
-      });
-    
-    return () => {
-      cancelled = true;
-    };
+    if (typeof window === 'undefined') return;
+    const userStr = localStorage.getItem('tt_user');
+    if (!userStr) {
+      setCurrentUser(null);
+      setLoading(false);
+      router.push('/login');
+      return;
+    }
+    try {
+      const user = JSON.parse(userStr);
+      setCurrentUser(user);
+      // Pre-fill form from stored user (matches profile page address shape)
+      const addr = user.address || {};
+      setFormData(prev => ({
+        ...prev,
+        fullName: user.name || "",
+        email: user.email || "",
+        phone: addr.phone || "",
+        address: addr.street || "",
+        city: addr.city || "",
+        postalCode: addr.zipCode || ""
+      }));
+    } catch {
+      setCurrentUser(null);
+      router.push('/login');
+    }
+    setLoading(false);
   }, [router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -105,74 +96,61 @@ export default function Checkout() {
 
     setOrderLoading(true);
     try {
-      // Prepare order data
-      const orderData = {
-        items: cartItems.map(item => ({
-          product: item.id, // This is the MongoDB _id from the product service
-          quantity: item.quantity,
-          price: item.price
-        })),
+      // Import AWS orders API (dynamic import to avoid issues)
+      const { placeOrder, formatCartItemsForApi } = await import('@/lib/aws-orders-api');
+
+      // Get Firebase user ID
+      // Note: We're using currentUser.id from the local backend for now
+      // In a production app with Firebase Auth, you would use: auth.currentUser?.uid
+      const userId = currentUser.id;
+
+      // Format cart items for AWS API
+      const formattedItems = formatCartItemsForApi(cartItems);
+
+      // Prepare additional order data
+      const additionalData = {
         subtotal: subtotal,
         shipping: shipping,
         tax: tax,
-        total: total,
         shippingAddress: {
-          street: formData.address,
-          city: formData.city,
-          province: formData.city, // Using city as province for now
-          zipCode: formData.postalCode,
-          country: "Sri Lanka",
-          phone: formData.phone,
           fullName: formData.fullName,
-          email: formData.email
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city,
+          postalCode: formData.postalCode,
+          country: "Sri Lanka"
         },
         paymentMethod: formData.paymentMethod,
         notes: `Payment method: ${formData.paymentMethod}`
       };
 
-      console.log('Placing order:', orderData);
-      console.log('Cart items:', cartItems);
-      
-      // Create order via API
-      const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
-      console.log('Token:', token);
-      
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
-      };
+      console.log('[Checkout] Placing order via AWS API...');
+      console.log('[Checkout] User ID:', userId);
+      console.log('[Checkout] Items:', formattedItems);
+      console.log('[Checkout] Total:', total);
 
-      console.log('Request headers:', headers);
-      console.log('Request URL:', 'http://localhost:4000/api/orders');
+      // Call AWS API to place order
+      const result = await placeOrder(userId, formattedItems, total, additionalData);
 
-      const response = await fetch('http://localhost:4000/api/orders', {
-        method: 'POST',
-        headers,
-        credentials: 'include',
-        body: JSON.stringify(orderData)
-      });
+      console.log('[Checkout] Order placed successfully:', result);
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Order creation failed:', errorData);
-        throw new Error(errorData.error || 'Failed to create order');
-      }
-
-      const result = await response.json();
-      console.log('Order created successfully:', result);
-      
       // Clear cart after successful order
       clearCart();
-      
-      // Show success modal
-      setOrderNumber(result.order.orderNumber);
+
+      // Show success modal with order details
+      setOrderNumber(result.orderNumber || result.orderId);
       setShowSuccessModal(true);
+
     } catch (error) {
-      console.error('Order placement failed:', error);
-      alert(`Failed to place order: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('[Checkout] Order placement failed:', error);
+
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error
+        ? error.message
+        : 'An unexpected error occurred while placing your order.';
+
+      alert(`Failed to place order: ${errorMessage}\n\nPlease try again or contact support if the problem persists.`);
     } finally {
       setOrderLoading(false);
     }
@@ -259,7 +237,7 @@ export default function Checkout() {
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number *</Label>
                   <Input
@@ -271,7 +249,7 @@ export default function Checkout() {
                     required
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="address">Address *</Label>
                   <Textarea
@@ -283,7 +261,7 @@ export default function Checkout() {
                     required
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="city">City *</Label>
@@ -347,7 +325,7 @@ export default function Checkout() {
                         required
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="cardNumber">Card Number *</Label>
                       <Input
@@ -359,7 +337,7 @@ export default function Checkout() {
                         required
                       />
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="expiryDate">Expiry Date *</Label>
@@ -398,7 +376,7 @@ export default function Checkout() {
                   Order Summary
                 </CardTitle>
               </CardHeader>
-              
+
               <CardContent className="space-y-4">
                 {/* Order Items */}
                 <div className="space-y-3">
@@ -414,36 +392,36 @@ export default function Checkout() {
                     </div>
                   ))}
                 </div>
-                
+
                 <Separator />
-                
+
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
                     <span>LKR {subtotal.toFixed(2)}</span>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span>Shipping</span>
                     <span>LKR {shipping.toFixed(2)}</span>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span>Tax</span>
                     <span>LKR {tax.toFixed(2)}</span>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total</span>
                     <span className="text-primary">LKR {total.toFixed(2)}</span>
                   </div>
                 </div>
               </CardContent>
-              
+
               <CardFooter>
-                <Button 
+                <Button
                   className="w-full bg-[#B37142] text-white hover:from-orange-600 hover:to-orange-700 focus:ring-1 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 shadow-lg"
                   onClick={handlePlaceOrder}
                   disabled={orderLoading}

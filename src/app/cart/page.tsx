@@ -24,30 +24,21 @@ export default function Cart() {
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
 
-  // Check authentication status
+  // Use same auth source as Navigation (tt_user in localStorage) so cart and header stay in sync
   useEffect(() => {
-    let cancelled = false;
-    const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
-    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-    
-    fetch("http://localhost:4000/api/auth/me", { credentials: "include", headers })
-      .then(async (r) => (r.ok ? r.json() : Promise.reject()))
-      .then((data) => {
-        if (!cancelled) {
-          setCurrentUser(data?.user || null);
-          setLoading(false);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setCurrentUser(null);
-          setLoading(false);
-        }
-      });
-    
-    return () => {
-      cancelled = true;
-    };
+    if (typeof window === 'undefined') return;
+    const userStr = localStorage.getItem('tt_user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setCurrentUser(user);
+      } catch {
+        setCurrentUser(null);
+      }
+    } else {
+      setCurrentUser(null);
+    }
+    setLoading(false);
   }, []);
 
   const handleProceedToCheckout = () => {
