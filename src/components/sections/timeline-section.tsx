@@ -5,29 +5,29 @@ import { motion, useScroll } from 'framer-motion';
 
 const milestones = [
     {
-        year: '1998',
+        year: '2014',
         title: 'The Beginning',
-        description: 'Our journey began in a small historic building with just 10 tables and a dream to redefine local dining.'
+        description: 'We started as a small tech retailer with a simple goal: make quality devices and gear accessible to everyone.'
     },
     {
-        year: '2005',
-        title: 'First Michelin Star',
-        description: 'After years of dedication to culinary perfection, we were honored with our first Michelin star.'
-    },
-    {
-        year: '2012',
-        title: 'The Expansion',
-        description: 'We expanded our premises to include a private dining room and a specialized wine cellar.'
+        year: '2017',
+        title: 'E-Commerce Launch',
+        description: 'Launched our online store, bringing smartphones, gaming gear, and audio to customers nationwide.'
     },
     {
         year: '2020',
-        title: 'Sustainable Future',
-        description: 'Launched our farm-to-table initiative, partnering with local organic farms for minimal carbon footprint.'
+        title: 'Expanded Catalog',
+        description: 'Grew our range to include consoles, smart devices, and accessories from leading brands.'
+    },
+    {
+        year: '2022',
+        title: 'Customer-First Focus',
+        description: 'Introduced extended warranties, easy returns, and 24/7 support to put customers first.'
     },
     {
         year: '2024',
-        title: 'Global Recognition',
-        description: 'Recognized as one of the top 50 restaurants in the world by Culinary Excellence Magazine.'
+        title: 'Tech Hub Today',
+        description: 'Recognized as a trusted destination for devices, gaming, and audio—one place for the tech you need.'
     }
 ];
 

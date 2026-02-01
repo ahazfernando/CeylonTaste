@@ -53,7 +53,7 @@ export default function AdminLayout({
   async function handleLogout() {
     try {
       // Import Firebase sign out
-      const { apiAuthService } = await import('@/lib/auth-firebase');
+      const { apiAuthService } = await import('@/lib/auth');
       await apiAuthService.signOut();
     } catch (error) {
       console.error('Logout error:', error);
@@ -69,8 +69,8 @@ export default function AdminLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-cream">
-        <div className="w-full bg-white/70 backdrop-blur border-b">
+      <div className="min-h-screen bg-background">
+        <div className="w-full bg-card border-b border-border">
           <div className="container py-3" />
         </div>
         <main className="container py-8">
@@ -82,8 +82,8 @@ export default function AdminLayout({
 
   if (!authorized) {
     return (
-      <div className="min-h-screen bg-gradient-cream">
-        <div className="w-full bg-white/70 backdrop-blur border-b">
+      <div className="min-h-screen bg-background">
+        <div className="w-full bg-card border-b border-border">
           <div className="container py-3" />
         </div>
         <main className="container py-8">
@@ -97,15 +97,15 @@ export default function AdminLayout({
     <SidebarProvider>
       <AdminSidebar />
       <SidebarInset>
-        <div className="w-full bg-white/70 backdrop-blur border-b">
+        <div className="w-full bg-card border-b border-border">
           <div className="container flex items-center justify-between py-3">
             <SidebarTrigger />
-            <Button className="bg-amber-800 text-white hover:bg-amber-700" onClick={handleLogout}>
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleLogout}>
               Logout
             </Button>
           </div>
         </div>
-        <div className="min-h-screen bg-gradient-cream">
+        <div className="min-h-screen bg-background">
           {children}
         </div>
       </SidebarInset>

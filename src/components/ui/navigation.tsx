@@ -7,7 +7,6 @@ import { ShoppingCart, Menu, X, User, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
-import primaryLogo from "@/assets/Home/CeylonTaste-Primary-2.png";
 import { useCart } from "@/contexts/CartContext";
 
 interface NavigationProps {
@@ -57,47 +56,47 @@ export function Navigation({ cartItemCount }: NavigationProps) {
 
   return (
     <div className="sticky top-0 z-50 pt-3 px-4">
-      <nav className="w-90% rounded-2xl bg-white">
+      <nav className="w-90% rounded-2xl bg-card border border-border">
         <div className="mx-4 flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3 flex-shrink-0">
             <Link href="/" className="flex items-center gap-2">
               <Image
-                src={primaryLogo.src}
-                alt="CeylonTaste Logo"
-                width={80}
-                height={80}
-                className="h-20 w-auto"
+                src="/logo/abteclogomain.png"
+                alt="Logo"
+                width={36}
+                height={36}
+                className="h-9 w-auto"
               />
             </Link>
           </div>
 
           {/* Desktop Navigation - Centered */}
-          <div className="hidden md:flex items-center gap-8 flex-1 justify-center">
+          <div className="hidden md:flex items-center gap-6 flex-1 justify-center">
             <Button
               variant="ghost"
-              className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 font-medium px-4"
+              className="text-foreground hover:text-primary hover:bg-accent font-medium px-3"
               asChild
             >
               <Link href="/">Home</Link>
             </Button>
             <Button
               variant="ghost"
-              className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 font-medium px-4"
+              className="text-foreground hover:text-primary hover:bg-accent font-medium px-3"
               asChild
             >
               <Link href="/products">Products</Link>
             </Button>
             <Button
               variant="ghost"
-              className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 font-medium px-4"
+              className="text-foreground hover:text-primary hover:bg-accent font-medium px-3"
               asChild
             >
               <Link href="/about">About</Link>
             </Button>
             <Button
               variant="ghost"
-              className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 font-medium px-4"
+              className="text-foreground hover:text-primary hover:bg-accent font-medium px-3"
               asChild
             >
               <Link href="/services">Services</Link>
@@ -105,7 +104,7 @@ export function Navigation({ cartItemCount }: NavigationProps) {
             {currentUser?.role === "admin" && (
               <Button
                 variant="ghost"
-                className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 font-medium flex items-center gap-1 px-4"
+                className="text-foreground hover:text-primary hover:bg-accent font-medium flex items-center gap-1 px-3"
                 asChild
               >
                 <Link href="/admin/dashboard">
@@ -121,13 +120,13 @@ export function Navigation({ cartItemCount }: NavigationProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="relative text-amber-900 hover:text-amber-700 hover:bg-amber-100/50"
+              className="relative text-foreground hover:text-primary hover:bg-accent"
               asChild
             >
               <Link href="/cart">
                 <ShoppingCart className="h-5 w-5" />
                 {actualCartCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-amber-600 text-white flex items-center justify-center">
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-primary text-primary-foreground flex items-center justify-center">
                     {actualCartCount}
                   </Badge>
                 )}
@@ -136,7 +135,7 @@ export function Navigation({ cartItemCount }: NavigationProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50"
+              className="text-foreground hover:text-primary hover:bg-accent"
               asChild
             >
               <Link href="/profile">
@@ -145,14 +144,14 @@ export function Navigation({ cartItemCount }: NavigationProps) {
             </Button>
             {currentUser ? (
               <Button
-                className="bg-amber-800 text-white hover:bg-amber-700 px-6 py-2 rounded-full font-medium shadow-sm ml-2"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2 rounded-full font-medium shadow-sm ml-2"
                 onClick={handleLogout}
               >
                 Logout
               </Button>
             ) : (
               <Button
-                className="bg-amber-800 text-white hover:bg-amber-700 px-6 py-2 rounded-full font-medium shadow-sm ml-2"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2 rounded-full font-medium shadow-sm ml-2"
                 asChild
               >
                 <Link href="/login">Login</Link>
@@ -164,7 +163,7 @@ export function Navigation({ cartItemCount }: NavigationProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden text-amber-900 hover:text-amber-700 hover:bg-amber-100/50"
+            className="md:hidden text-foreground hover:text-primary hover:bg-accent"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -173,32 +172,32 @@ export function Navigation({ cartItemCount }: NavigationProps) {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden border-t border-amber-200/30" style={{ backgroundColor: '#EFE2D1' }}>
+          <div className="md:hidden border-t border-border bg-card">
             <div className="mx-4 py-4 space-y-2">
               <Button
                 variant="ghost"
-                className="w-full justify-start text-amber-900 hover:text-amber-700 hover:bg-amber-100/50"
+                className="w-full justify-start text-foreground hover:text-primary hover:bg-accent"
                 asChild
               >
                 <Link href="/">Home</Link>
               </Button>
               <Button
                 variant="ghost"
-                className="w-full justify-start text-amber-900 hover:text-amber-700 hover:bg-amber-100/50"
+                className="w-full justify-start text-foreground hover:text-primary hover:bg-accent"
                 asChild
               >
                 <Link href="/products">Products</Link>
               </Button>
               <Button
                 variant="ghost"
-                className="w-full justify-start text-amber-900 hover:text-amber-700 hover:bg-amber-100/50"
+                className="w-full justify-start text-foreground hover:text-primary hover:bg-accent"
                 asChild
               >
                 <Link href="/about">About</Link>
               </Button>
               <Button
                 variant="ghost"
-                className="w-full justify-start text-amber-900 hover:text-amber-700 hover:bg-amber-100/50"
+                className="w-full justify-start text-foreground hover:text-primary hover:bg-accent"
                 asChild
               >
                 <Link href="/services">Services</Link>
@@ -206,7 +205,7 @@ export function Navigation({ cartItemCount }: NavigationProps) {
               {currentUser?.role === "admin" && (
                 <Button
                   variant="ghost"
-                  className="w-full justify-start text-amber-900 hover:text-amber-700 hover:bg-amber-100/50 flex items-center gap-2"
+                  className="w-full justify-start text-foreground hover:text-primary hover:bg-accent flex items-center gap-2"
                   asChild
                 >
                   <Link href="/admin/dashboard">
@@ -215,17 +214,17 @@ export function Navigation({ cartItemCount }: NavigationProps) {
                   </Link>
                 </Button>
               )}
-              <div className="flex items-center gap-3 pt-4 border-t border-amber-200/30">
+              <div className="flex items-center gap-3 pt-4 border-t border-border">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative text-amber-900 hover:text-amber-700 hover:bg-amber-100/50"
+                  className="relative text-foreground hover:text-primary hover:bg-accent"
                   asChild
                 >
                   <Link href="/cart">
                     <ShoppingCart className="h-5 w-5" />
                     {actualCartCount > 0 && (
-                      <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-amber-600 text-white flex items-center justify-center">
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-primary text-primary-foreground flex items-center justify-center">
                         {actualCartCount}
                       </Badge>
                     )}
@@ -234,7 +233,7 @@ export function Navigation({ cartItemCount }: NavigationProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-amber-900 hover:text-amber-700 hover:bg-amber-100/50"
+                  className="text-foreground hover:text-primary hover:bg-accent"
                   asChild
                 >
                   <Link href="/profile">
@@ -243,14 +242,14 @@ export function Navigation({ cartItemCount }: NavigationProps) {
                 </Button>
                 {currentUser ? (
                   <Button
-                    className="bg-amber-800 text-white hover:bg-amber-700 flex-1 rounded-full font-medium"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 flex-1 rounded-full font-medium"
                     onClick={handleLogout}
                   >
                     Logout
                   </Button>
                 ) : (
                   <Button
-                    className="bg-amber-800 text-white hover:bg-amber-700 flex-1 rounded-full font-medium"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 flex-1 rounded-full font-medium"
                     asChild
                   >
                     <Link href="/login">Login</Link>

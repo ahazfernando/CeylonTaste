@@ -6,7 +6,10 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Utility function to get full image URL
-export function getImageUrl(imagePath: string): string {
+export function getImageUrl(imagePath: string | undefined | null): string {
+  if (imagePath == null || imagePath === '') {
+    return '';
+  }
   // If it's already a full URL, return it
   if (imagePath.startsWith('http')) {
     return imagePath;

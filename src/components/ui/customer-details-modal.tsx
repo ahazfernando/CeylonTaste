@@ -13,12 +13,12 @@ interface CustomerDetails {
   phone?: string;
   customerStatus?: string;
   address?: {
-    street: string;
-    city: string;
-    province: string;
-    zipCode: string;
-    country: string;
-    phone: string;
+    street?: string;
+    city?: string;
+    province?: string;
+    zipCode?: string;
+    country?: string;
+    phone?: string;
   };
   totalOrders: number;
   totalSpent: number;
@@ -110,13 +110,14 @@ export function CustomerDetailsModal({ isOpen, onClose, customer }: CustomerDeta
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {customer.address ? (
+              {customer.address && (customer.address.street || customer.address.city || customer.address.country) ? (
                 <div className="space-y-2">
-                  <p className="font-medium">{customer.address.street}</p>
+                  {customer.address.street && <p className="font-medium">{customer.address.street}</p>}
                   <p className="text-muted-foreground">
-                    {customer.address.city}, {customer.address.province} {customer.address.zipCode}
+                    {[customer.address.city, customer.address.province].filter(Boolean).join(", ")}
+                    {customer.address.zipCode ? ` ${customer.address.zipCode}` : ""}
                   </p>
-                  <p className="text-muted-foreground">{customer.address.country}</p>
+                  {customer.address.country && <p className="text-muted-foreground">{customer.address.country}</p>}
                   {customer.address.phone && (
                     <p className="text-sm text-muted-foreground">Phone: {customer.address.phone}</p>
                   )}

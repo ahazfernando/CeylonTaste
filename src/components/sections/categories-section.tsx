@@ -27,8 +27,8 @@ export function CategoriesSection() {
         // Get all products
         const allProducts = await productService.getAllProducts();
         
-        // Get unique categories
-        const uniqueCategories = Array.from(new Set(allProducts.map(p => p.category)));
+        // Get unique categories (filter out undefined)
+        const uniqueCategories = Array.from(new Set(allProducts.map(p => p.category).filter((c): c is string => c != null)));
         
         // Get top 4 categories (you can modify this logic)
         const topCategories = uniqueCategories.slice(0, 4);
@@ -118,7 +118,7 @@ export function CategoriesSection() {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                         {product.isFeatured && (
-                          <Badge className="absolute top-2 left-2 bg-amber-500 text-white text-xs">
+                          <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground text-xs">
                             Featured
                           </Badge>
                         )}
@@ -129,10 +129,10 @@ export function CategoriesSection() {
                         )}
                       </div>
                       <div className="mt-2">
-                        <h4 className="text-sm font-medium text-gray-900 line-clamp-1">
+                        <h4 className="text-sm font-medium text-foreground line-clamp-1">
                           {product.name}
                         </h4>
-                        <p className="text-xs text-gray-600 font-semibold">
+                        <p className="text-xs text-muted-foreground font-semibold">
                           LKR {product.price}
                         </p>
                         <Badge 
@@ -156,7 +156,7 @@ export function CategoriesSection() {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="w-full group hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700"
+                    className="w-full group hover:bg-accent hover:text-accent-foreground"
                   >
                     View All {category.name}
                     <ArrowRight className="ml-2 h-3 w-3 group-hover:translate-x-1 transition-transform" />
@@ -172,7 +172,7 @@ export function CategoriesSection() {
           <Link href="/products">
             <Button 
               size="lg" 
-              className="bg-amber-800 hover:bg-amber-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+              className="bg-background border border-border text-foreground hover:bg-accent hover:text-accent-foreground shadow-lg transition-all duration-300"
             >
               View All Products
               <ArrowRight className="ml-2 h-4 w-4" />

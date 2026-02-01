@@ -7,14 +7,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Search, Eye, Clock, CheckCircle, XCircle, Package, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { OrderListSkeleton } from "@/components/skeletons/order-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getOrders } from "@/lib/aws-orders-api";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface OrderItem {
-  product: {
+  product?: {
     _id: string;
     name: string;
-    image: string;
+    image?: string;
   } | null;
   quantity: number;
   price: number;
@@ -33,20 +43,23 @@ interface Order {
   status: string;
   createdAt: string;
   shippingAddress?: {
-    street: string;
-    city: string;
-    province: string;
-    zipCode: string;
-    country: string;
-    phone: string;
-    fullName: string;
-    email: string;
+    street?: string;
+    address?: string;
+    city?: string;
+    province?: string;
+    zipCode?: string;
+    postalCode?: string;
+    country?: string;
+    phone?: string;
+    fullName?: string;
+    email?: string;
   };
 }
 
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
     case "pending":
+    case "confirmed":
       return <Badge className="bg-warning text-warning-foreground"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
     case "processing":
       return <Badge className="bg-primary text-primary-foreground"><Package className="h-3 w-3 mr-1" />Processing</Badge>;
@@ -63,43 +76,55 @@ function StatusBadge({ status }: { status: string }) {
 
 const statusFlow: Record<string, string[]> = {
   pending: ["processing", "cancelled"],
+  confirmed: ["processing", "cancelled"],
   processing: ["shipped", "cancelled"],
   shipped: ["delivered"],
   delivered: [],
   cancelled: [],
 };
 
+/** Update order status URL: local PUT /api/orders/:id/status or AWS PUT /orders/:id/status */
+function getOrdersStatusUrl(orderId: string): string {
+  if (useOrdersFromAws()) {
+    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+    return `${base}/orders/${orderId}/status`;
+  }
+  const url = process.env.NEXT_PUBLIC_ORDERS_API_URL || "";
+  const base = url ? url.replace(/\/api\/orders\/?$/, "") || "http://localhost:4000" : "http://localhost:4000";
+  return `${base}/api/orders/${orderId}/status`;
+}
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  const fetchOrders = useCallback(async () => {
+    setFetchError(null);
+    setLoading(true);
+    try {
+      const { orders: list } = await getOrders();
+      setOrders(list);
+    } catch (error) {
+      setFetchError(
+        error instanceof Error
+          ? error.message
+          : "Could not load orders. Check NEXT_PUBLIC_API_BASE_URL and RUN-BACKENDS.md, then click Retry."
+      );
+      setOrders([]);
+      console.error("Error fetching orders:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
-        const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-        
-        const response = await fetch("http://localhost:4000/api/orders/admin/all", { 
-          credentials: "include", 
-          headers 
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setOrders(data.orders || []);
-        }
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchOrders();
-  }, []);
+  }, [fetchOrders]);
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
@@ -132,8 +157,8 @@ export default function AdminOrdersPage() {
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
       const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-      
-      const response = await fetch(`http://localhost:4000/api/orders/${orderId}/status`, {
+      const statusUrl = getOrdersStatusUrl(orderId);
+      const response = await fetch(statusUrl, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -169,16 +194,59 @@ export default function AdminOrdersPage() {
           <h1 className="text-3xl font-bold text-foreground">Orders</h1>
           <p className="text-muted-foreground">Manage and track customer orders</p>
         </div>
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">Loading orders...</p>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="border-border">
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-20" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-12" />
+              </CardContent>
+            </Card>
+          ))}
         </div>
+        <div className="relative max-w-md">
+          <Skeleton className="h-10 w-full" />
+        </div>
+        <Card className="border-border">
+          <CardHeader>
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-72" />
+          </CardHeader>
+          <CardContent>
+            <OrderListSkeleton count={6} />
+          </CardContent>
+        </Card>
       </main>
     );
   }
 
+  const formatDateForModal = (dateString: string) =>
+    new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
   return (
+    <>
     <main className="container p-6 space-y-6">
             <div className="flex flex-col gap-2"><h1 className="text-3xl font-bold text-foreground">Orders</h1><p className="text-muted-foreground">Manage and track customer orders</p></div>
+
+            {fetchError && (
+              <Card className="border-destructive/50 bg-destructive/10">
+                <CardContent className="pt-6">
+                  <p className="text-destructive font-medium mb-2">Could not load orders</p>
+                  <p className="text-sm text-muted-foreground mb-4">{fetchError}</p>
+                  <Button variant="outline" onClick={() => fetchOrders()}>
+                    Retry
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-warning">{orders.filter(o => o.status === "pending").length}</div></CardContent></Card>
@@ -199,32 +267,31 @@ export default function AdminOrdersPage() {
                   <OrderListSkeleton count={6} />
                 ) : (
                   <Table>
-                    <TableHeader><TableRow className="border-border"><TableHead className="text-foreground">Order ID</TableHead><TableHead className="text-foreground">Customer</TableHead><TableHead className="text-foreground">Shipping Address</TableHead><TableHead className="text-foreground">Items</TableHead><TableHead className="text-foreground">Total</TableHead><TableHead className="text-foreground">Status</TableHead><TableHead className="text-foreground">Date & Time</TableHead><TableHead className="text-foreground">Actions</TableHead></TableRow></TableHeader>
+                    <TableHeader><TableRow className="border-border"><TableHead className="text-foreground">Order ID</TableHead><TableHead className="text-foreground">Customer</TableHead><TableHead className="text-foreground">Items</TableHead><TableHead className="text-foreground">Total</TableHead><TableHead className="text-foreground">Status</TableHead><TableHead className="text-foreground">Date & Time</TableHead><TableHead className="text-foreground">Actions</TableHead></TableRow></TableHeader>
                     <TableBody>
                     {filteredOrders.map((order) => (
-                      <TableRow key={order._id} className="border-border">
+                      <TableRow
+                        key={order._id}
+                        className="border-border cursor-pointer hover:bg-muted/50"
+                        onClick={() => setSelectedOrder(order)}
+                      >
                         <TableCell className="font-medium text-foreground">{order.orderNumber}</TableCell>
                         <TableCell className="text-foreground">{order.user.name}</TableCell>
-                        <TableCell className="text-muted-foreground max-w-xs">
-                          {order.shippingAddress ? (
-                            <div className="space-y-1">
-                              <div className="font-medium">{order.shippingAddress.fullName}</div>
-                              <div className="text-xs">{order.shippingAddress.street}</div>
-                              <div className="text-xs">{order.shippingAddress.city}, {order.shippingAddress.province}</div>
-                              <div className="text-xs">{order.shippingAddress.zipCode}</div>
-                              <div className="text-xs">{order.shippingAddress.phone}</div>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">No address</span>
-                          )}
-                        </TableCell>
                         <TableCell className="text-muted-foreground max-w-xs truncate">{getItemsString(order.items)}</TableCell>
                         <TableCell className="font-medium text-foreground">LKR {order.total.toFixed(2)}</TableCell>
                         <TableCell><StatusBadge status={order.status} /></TableCell>
                         <TableCell className="text-muted-foreground">{formatDate(order.createdAt)}</TableCell>
-                        <TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0"><Eye className="h-4 w-4 text-muted-foreground" /></Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); }}
+                              title="View order details"
+                            >
+                              <Eye className="h-4 w-4 text-muted-foreground" />
+                            </Button>
                             {statusFlow[order.status]?.length > 0 && (
                               <Select 
                                 value={order.status} 
@@ -252,10 +319,102 @@ export default function AdminOrdersPage() {
                     </TableBody>
                   </Table>
                 )}
-                {!loading && filteredOrders.length === 0 && (<div className="text-center py-12"><Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" /><h3 className="text-lg font-medium text-foreground mb-2">No orders found</h3><p className="text-muted-foreground">Try adjusting your search or filter criteria.</p></div>)}
+                {!loading && filteredOrders.length === 0 && !fetchError && (
+                  <div className="text-center py-12">
+                    <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-foreground mb-2">No orders found</h3>
+                    <p className="text-muted-foreground mb-2">Try adjusting your search or filter criteria.</p>
+                    <p className="text-sm text-muted-foreground">Orders placed at checkout appear here when the orders server is running (see RUN-BACKENDS.md).</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
+
+      {/* Order details modal */}
+      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto rounded-[24px]">
+          <DialogHeader>
+            <DialogTitle>Order {selectedOrder?.orderNumber}</DialogTitle>
+            <DialogDescription>
+              {selectedOrder && (
+                <>
+                  {formatDateForModal(selectedOrder.createdAt)} ·{" "}
+                  <StatusBadge status={selectedOrder.status} />
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedOrder && (
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Customer</h4>
+                <p className="font-medium text-foreground">{selectedOrder.user.name}</p>
+                <p className="text-sm text-muted-foreground">{selectedOrder.user.email}</p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Items</h4>
+                <div className="border rounded-[24px] divide-y">
+                  {selectedOrder.items.map((item, idx) => (
+                    <div key={idx} className="flex justify-between items-center py-2 px-3">
+                      <div className="text-sm">
+                        <span className="font-medium">{item.product?.name || "Unknown Product"}</span>
+                        <span className="text-muted-foreground ml-1">× {item.quantity}</span>
+                      </div>
+                      <div className="font-medium">
+                        LKR {(item.quantity * item.price).toFixed(2)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="flex justify-between text-lg font-semibold pt-2 border-t">
+                <span>Total</span>
+                <span>LKR {selectedOrder.total.toFixed(2)}</span>
+              </div>
+              {selectedOrder.shippingAddress && (
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Shipping address</h4>
+                  <div className="text-sm border rounded-[24px] p-3 space-y-1 text-foreground">
+                    {selectedOrder.shippingAddress.fullName && (
+                      <p className="font-medium">{selectedOrder.shippingAddress.fullName}</p>
+                    )}
+                    {(selectedOrder.shippingAddress.address ?? selectedOrder.shippingAddress.street) && (
+                      <p className="text-muted-foreground">
+                        {selectedOrder.shippingAddress.address ?? selectedOrder.shippingAddress.street}
+                      </p>
+                    )}
+                    {(selectedOrder.shippingAddress.city || selectedOrder.shippingAddress.province) && (
+                      <p className="text-muted-foreground">
+                        {[selectedOrder.shippingAddress.city, selectedOrder.shippingAddress.province]
+                          .filter(Boolean)
+                          .join(", ")}
+                        {(selectedOrder.shippingAddress.zipCode ?? selectedOrder.shippingAddress.postalCode) &&
+                          ` ${selectedOrder.shippingAddress.zipCode ?? selectedOrder.shippingAddress.postalCode}`}
+                      </p>
+                    )}
+                    {selectedOrder.shippingAddress.country && (
+                      <p className="text-muted-foreground">{selectedOrder.shippingAddress.country}</p>
+                    )}
+                    {selectedOrder.shippingAddress.phone && (
+                      <p className="text-muted-foreground">Phone: {selectedOrder.shippingAddress.phone}</p>
+                    )}
+                    {selectedOrder.shippingAddress.email && (
+                      <p className="text-muted-foreground">Email: {selectedOrder.shippingAddress.email}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedOrder(null)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
+    </>
   );
 }
 

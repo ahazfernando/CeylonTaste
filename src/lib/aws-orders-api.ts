@@ -10,9 +10,8 @@
 import { OrderPayload, OrderResponse, ApiError, OrderItem } from './types';
 
 /**
- * Get the orders API endpoint URL.
- * Prefer NEXT_PUBLIC_ORDERS_API_URL (full URL to place-order endpoint, e.g. http://localhost:4000/api/orders).
- * Fallback: NEXT_PUBLIC_API_BASE_URL + '/orders' for AWS or other backends.
+ * Get the orders API endpoint URL (for POST place order).
+ * Orders use your AWS API (no separate orders server). Set NEXT_PUBLIC_API_BASE_URL; optional NEXT_PUBLIC_ORDERS_API_URL for a local orders server.
  */
 const getOrdersEndpoint = (): string => {
     const fullUrl = process.env.NEXT_PUBLIC_ORDERS_API_URL;
@@ -21,12 +20,91 @@ const getOrdersEndpoint = (): string => {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
     if (!baseUrl) {
         throw new Error(
-            'Neither NEXT_PUBLIC_ORDERS_API_URL nor NEXT_PUBLIC_API_BASE_URL is set. ' +
-            'Add NEXT_PUBLIC_ORDERS_API_URL (e.g. http://localhost:4000/api/orders) or NEXT_PUBLIC_API_BASE_URL to .env'
+            'NEXT_PUBLIC_API_BASE_URL is not set. Orders use your AWS API—no separate server needed. Add NEXT_PUBLIC_API_BASE_URL to .env (see RUN-BACKENDS.md).'
         );
     }
     return `${baseUrl.replace(/\/$/, '')}/orders`;
 };
+
+/** Base URL for orders (no trailing slash). Used for GET list. */
+function getOrdersBaseUrl(): string {
+    const fullUrl = process.env.NEXT_PUBLIC_ORDERS_API_URL;
+    if (fullUrl) {
+        const base = fullUrl.replace(/\/api\/orders\/?$/, '') || 'http://localhost:4000';
+        return base.replace(/\/$/, '');
+    }
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!baseUrl) return '';
+    return baseUrl.replace(/\/$/, '');
+}
+
+/** List orders URL: AWS GET /orders or local GET /api/orders/admin/all */
+export function getOrdersListUrl(): string {
+    const base = getOrdersBaseUrl();
+    if (process.env.NEXT_PUBLIC_ORDERS_API_URL) {
+        return `${base}/api/orders/admin/all`;
+    }
+    return `${base}/orders`;
+}
+
+/** Shape of a single order as returned by GET /orders (admin or profile). */
+export interface OrderListItem {
+    _id: string;
+    orderNumber: string;
+    user?: { _id: string; name?: string; email?: string };
+    items: Array<{
+        product?: { _id: string; name?: string; image?: string };
+        quantity: number;
+        price: number;
+    }>;
+    total: number;
+    status: string;
+    createdAt: string;
+    shippingAddress?: Record<string, unknown>;
+}
+
+/**
+ * Fetches all orders from the API (admin list). Callers can filter by userId for the current user's orders.
+ * In the browser we call the same-origin /api/orders proxy to avoid CORS; the proxy forwards to the backend.
+ */
+export async function getOrders(): Promise<{ orders: OrderListItem[] }> {
+    const base = getOrdersBaseUrl();
+    if (!base) {
+        throw new Error(
+            'Orders API URL is not set. Add NEXT_PUBLIC_API_BASE_URL to .env (or NEXT_PUBLIC_ORDERS_API_URL for local orders). See RUN-BACKENDS.md.'
+        );
+    }
+
+    const isBrowser = typeof window !== 'undefined';
+    const listUrl = isBrowser ? '/api/orders' : getOrdersListUrl();
+    const token = isBrowser ? localStorage.getItem('tt_token') : null;
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
+    try {
+        const response = await fetch(listUrl, { credentials: 'include', headers });
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            const msg = data.error || (await response.text()) || response.statusText;
+            throw new Error(`Orders request failed: ${response.status} ${String(msg).slice(0, 100)}`);
+        }
+        const data = await response.json();
+        return { orders: data.orders ?? [] };
+    } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        const isNetworkError =
+            msg === 'Load failed' ||
+            msg === 'Failed to fetch' ||
+            msg.includes('NetworkError') ||
+            msg.includes('Network request failed') ||
+            (err instanceof TypeError && msg.includes('fetch'));
+        if (isNetworkError) {
+            throw new Error(
+                'Could not connect to the orders server. Check that NEXT_PUBLIC_API_BASE_URL is correct in .env and the API is reachable (see RUN-BACKENDS.md).'
+            );
+        }
+        throw err;
+    }
+}
 
 /**
  * Places an order by sending data to AWS API Gateway
@@ -38,7 +116,7 @@ const getOrdersEndpoint = (): string => {
  * 4. Lambda validates and stores order in DynamoDB
  * 5. Lambda returns success response with order ID
  * 
- * @param userId - Firebase user ID (identifies the customer)
+ * @param userId - User ID (Cognito sub; identifies the customer)
  * @param items - Array of cart items with product details
  * @param total - Total order amount
  * @param additionalData - Optional shipping address, payment method, etc.
@@ -48,7 +126,7 @@ const getOrdersEndpoint = (): string => {
  * @example
  * ```typescript
  * const result = await placeOrder(
- *   'firebase-user-id-123',
+ *   'user-id-from-cognito',
  *   [{ productId: 'prod-1', productName: 'Ceylon Tea', quantity: 2, price: 15.99 }],
  *   31.98,
  *   {
@@ -120,15 +198,15 @@ export async function placeOrder(
                 data = await response.json();
             } catch (parseErr) {
                 throw new Error(
-                    `Order service returned invalid JSON (status ${response.status}). Is the correct orders API URL configured? Check NEXT_PUBLIC_ORDERS_API_URL or NEXT_PUBLIC_API_BASE_URL.`
+                    `Orders API returned invalid JSON (status ${response.status}). Orders use your AWS API—no separate server needed. Check NEXT_PUBLIC_API_BASE_URL and that the API is deployed with the /orders endpoint (see RUN-BACKENDS.md).`
                 );
             }
         } else {
             const text = await response.text();
             throw new Error(
                 !response.ok
-                    ? `Order service error: ${response.status} ${response.statusText}${text ? ` — ${text.slice(0, 100)}` : ''}. Check that the backend is running and NEXT_PUBLIC_ORDERS_API_URL points to it (e.g. http://localhost:4000/api/orders).`
-                    : 'Order service did not return JSON. Check NEXT_PUBLIC_ORDERS_API_URL.'
+                    ? `Orders API error: ${response.status} ${response.statusText}${text ? ` — ${text.slice(0, 100)}` : ''}. Orders use your AWS API (no separate server). Check NEXT_PUBLIC_API_BASE_URL and that the API is deployed with /orders (see RUN-BACKENDS.md).`
+                    : 'Orders API did not return JSON. Orders use AWS—check NEXT_PUBLIC_API_BASE_URL and deployment (RUN-BACKENDS.md).'
             );
         }
 
@@ -156,7 +234,7 @@ export async function placeOrder(
             const msg = error.message;
             if (msg.includes('Failed to fetch') || msg.includes('Load failed') || msg.includes('NetworkError')) {
                 throw new Error(
-                    'Unable to connect to the order service. Make sure the backend is running (e.g. on http://localhost:4000) and NEXT_PUBLIC_ORDERS_API_URL is set to its orders endpoint (e.g. http://localhost:4000/api/orders).'
+                    'Unable to connect to the orders API. Orders are fixed—no separate orders server is needed. They use your AWS API: set NEXT_PUBLIC_API_BASE_URL and deploy the backend with the /orders endpoint (see RUN-BACKENDS.md).'
                 );
             }
             throw new Error(`Order placement failed: ${msg}`);

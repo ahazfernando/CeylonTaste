@@ -8,9 +8,9 @@ import {
   Tags, 
   ShoppingCart, 
   Users, 
-  Archive,
   Coffee,
   Settings,
+  Zap,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
@@ -33,7 +33,6 @@ const menuItems = [
   { title: "Categories", url: "/admin/categories", icon: Tags },
   { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
   { title: "Customers", url: "/admin/customers", icon: Users },
-  { title: "Inventory", url: "/admin/inventory", icon: Archive },
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 
@@ -63,11 +62,11 @@ export function AdminSidebar() {
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
-            <Coffee className="h-4 w-4 text-sidebar-primary-foreground" />
+            <Zap className="h-4 w-4 text-sidebar-primary-foreground" />
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight">
             <span className="truncate font-semibold">{userName}</span>
-            <span className="truncate text-xs text-sidebar-foreground/70">Bakery & Cafe</span>
+            <span className="truncate text-xs text-sidebar-foreground/70">Premium Electronics</span>
           </div>
         </div>
       </SidebarHeader>

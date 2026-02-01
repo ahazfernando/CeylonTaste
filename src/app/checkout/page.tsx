@@ -168,7 +168,7 @@ export default function Checkout() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-cream flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading checkout...</p>
@@ -182,7 +182,7 @@ export default function Checkout() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-cream">
+    <div className="min-h-screen bg-background text-foreground">
       <Navigation />
       <main className="container py-8">
         {/* Header */}
@@ -372,7 +372,7 @@ export default function Checkout() {
           <div>
             <Card className="shadow-coffee sticky top-8">
               <CardHeader>
-                <CardTitle className="bg-gradient-coffee bg-clip-text text-transparent">
+                <CardTitle className="text-foreground">
                   Order Summary
                 </CardTitle>
               </CardHeader>
@@ -422,7 +422,7 @@ export default function Checkout() {
 
               <CardFooter>
                 <Button
-                  className="w-full bg-[#B37142] text-white hover:from-orange-600 hover:to-orange-700 focus:ring-1 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                  className="w-full bg-background border border-border text-foreground hover:bg-accent hover:text-accent-foreground focus:ring-1 focus:ring-offset-2 transition-all duration-200 shadow-lg"
                   onClick={handlePlaceOrder}
                   disabled={orderLoading}
                 >

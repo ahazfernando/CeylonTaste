@@ -54,7 +54,7 @@ export default function Products() {
   });
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background text-foreground">
       <Navigation />
       <main className="container py-8">
         {/* Header */}

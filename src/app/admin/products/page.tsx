@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { Plus, Search, Edit, Trash2, Package, Upload, X, Image as ImageIcon, Filter } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Package, Upload, X, Image as ImageIcon, Filter, ArrowRight } from "lucide-react";
 import { productService, imageUploadService, Product } from "@/lib/products";
 import { getImageUrl } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -99,14 +99,14 @@ const Products = () => {
     }
   };
 
-  // Get unique categories from products
-  const productCategories = ["All", ...Array.from(new Set(products.map(p => p.category)))];
+  // Get unique categories from products (filter out undefined/empty)
+  const productCategories: string[] = ["All", ...Array.from(new Set(products.map(p => p.category).filter((c): c is string => c != null && c !== "")))];
 
   // Filter and sort products
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.category.toLowerCase().includes(searchTerm.toLowerCase());
+                         (product.description ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (product.category ?? "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
   }).sort((a, b) => {
@@ -124,9 +124,9 @@ const Products = () => {
         }
         return (a.id || '').localeCompare(b.id || '');
       case "price-low":
-        return a.price - b.price;
+        return (a.price ?? 0) - (b.price ?? 0);
       case "price-high":
-        return b.price - a.price;
+        return (b.price ?? 0) - (a.price ?? 0);
       case "name-asc":
         return a.name.localeCompare(b.name);
       case "name-desc":
@@ -283,42 +283,57 @@ const Products = () => {
     }
   };
 
-  // Edit product
-  const handleEdit = (product: Product) => {
+  // Populate form from a product (used for edit and view details)
+  const applyProductToForm = (product: Product) => {
     setFormData({
-      name: product.name,
-      description: product.description,
-      price: product.price.toString(),
+      name: product.name ?? "",
+      description: product.description ?? "",
+      price: product.price != null ? String(product.price) : "",
       availability: product.availability || "Available",
-      category: product.category,
-      image: product.image,
+      category: product.category ?? "",
+      image: product.image ?? "",
       isNewProduct: product.isNewProduct || false,
       isFeatured: product.isFeatured || false,
     });
     setImagePreview(getImageUrl(product.image));
-    setImageFile(null); // Reset image file when editing
-    setIsEditing(true);
+    setImageFile(null);
+  };
+
+  // Edit product — fetch full product from API so all fields (price, category, description, image) are loaded
+  const handleEdit = async (product: Product) => {
     setEditingProduct(product);
+    setIsEditing(true);
+    try {
+      const full = await productService.getProductById(product.id);
+      if (full) {
+        applyProductToForm(full);
+        setEditingProduct(full);
+      } else {
+        applyProductToForm(product);
+      }
+    } catch {
+      applyProductToForm(product);
+    }
     setIsDialogOpen(true);
   };
 
-  // View Details handler
-  const handleViewDetails = (product: Product) => {
-    setFormData({
-      name: product.name,
-      description: product.description,
-      price: product.price.toString(),
-      availability: product.availability || "Available",
-      category: product.category,
-      image: product.image,
-      isNewProduct: product.isNewProduct || false,
-      isFeatured: product.isFeatured || false,
-    });
-    setImagePreview(getImageUrl(product.image));
-    setImageFile(null); // Reset image file when viewing
-    setIsEditing(true); // Make it editable
-    setEditingProduct(product);
+  // View Details — fetch full product so all fields are shown
+  const handleViewDetails = async (product: Product) => {
     setViewingProduct(product);
+    setEditingProduct(product);
+    try {
+      const full = await productService.getProductById(product.id);
+      if (full) {
+        applyProductToForm(full);
+        setViewingProduct(full);
+        setEditingProduct(full);
+      } else {
+        applyProductToForm(product);
+      }
+    } catch {
+      applyProductToForm(product);
+    }
+    setIsEditing(true);
     setIsViewDetailsOpen(true);
   };
 
@@ -833,26 +848,30 @@ const Products = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {paginatedProducts.map((product) => (
-          <Card key={product.id} className="border-border shadow-warm hover:shadow-elegant transition-smooth">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-accent">
-                    <Package className="h-6 w-6 text-accent-foreground" />
+          <Card key={product.id} className="rounded-[24px] overflow-hidden border-border shadow-warm hover:shadow-elegant transition-smooth">
+            <CardHeader className="pb-3 overflow-hidden">
+              <div className="flex items-start justify-between gap-2 min-w-0">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-accent">
+                    {product.image ? (
+                      <img src={getImageUrl(product.image)} alt={product.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <Package className="h-6 w-6 text-accent-foreground" />
+                    )}
                   </div>
-                  <div>
-                    <CardTitle className="text-lg text-foreground">{product.name}</CardTitle>
-                    <CardDescription className="text-muted-foreground">{product.category}</CardDescription>
+                  <div className="min-w-0 flex-1 overflow-hidden">
+                    <CardTitle className="text-lg text-foreground truncate">{product.name}</CardTitle>
+                    <CardDescription className="text-muted-foreground truncate">{product.category || "—"}</CardDescription>
                   </div>
                 </div>
                 <div className="flex gap-1">
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-8 w-8 p-0 hover:bg-amber-100"
+                    className="h-8 w-8 p-0 text-white hover:bg-white/10"
                     onClick={() => handleEdit(product)}
                   >
-                    <Edit className="h-4 w-4 text-amber-800" />
+                    <Edit className="h-4 w-4" />
                   </Button>
                   <Button 
                     variant="ghost" 
@@ -865,21 +884,24 @@ const Products = () => {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">{product.description}</p>
+            <CardContent className="space-y-3 overflow-hidden">
+              <p className="text-sm text-muted-foreground line-clamp-2 break-words">{product.description || "—"}</p>
               <div className="flex items-center justify-between">
-                <span className="text-2xl font-bold text-foreground">LKR {product.price}</span>
+                <span className="text-2xl font-bold text-foreground">
+                LKR {product.price != null ? Number(product.price).toFixed(2) : "—"}
+              </span>
                 {getAvailabilityBadge(product.availability || "Available")}
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Availability: {product.availability || "Available"}</span>
                 <Button 
-                  variant="outline" 
+                  variant="ghost" 
                   size="sm" 
-                  className="border-amber-300 hover:bg-amber-50 text-amber-800 hover:text-amber-900"
+                  className="text-white hover:text-white hover:bg-white/10"
                   onClick={() => handleViewDetails(product)}
                 >
                   View Details
+                  <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Button>
               </div>
             </CardContent>

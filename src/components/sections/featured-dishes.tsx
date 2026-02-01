@@ -16,14 +16,14 @@ function FeaturedDishesContent({ dishes }: { dishes: Product[] }) {
     const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
 
     return (
-        <section ref={containerRef} className="relative py-32 bg-white overflow-hidden">
+        <section ref={containerRef} className="relative py-32 bg-background overflow-hidden">
             {/* Animated Background Pattern */}
             <motion.div
                 style={{ y: backgroundY }}
-                className="absolute inset-0 opacity-5 pointer-events-none"
+                className="absolute inset-0 opacity-10 pointer-events-none"
             >
                 <div className="absolute inset-0" style={{
-                    backgroundImage: `radial-gradient(circle at 2px 2px, #d97706 1px, transparent 0)`,
+                    backgroundImage: `radial-gradient(circle at 2px 2px, hsl(var(--primary)) 1px, transparent 0)`,
                     backgroundSize: '40px 40px'
                 }} />
             </motion.div>
@@ -41,14 +41,14 @@ function FeaturedDishesContent({ dishes }: { dishes: Product[] }) {
                         whileInView={{ scaleX: 1 }}
                         viewport={{ once: true }}
                         transition={{ duration: 1, ease: "easeOut" }}
-                        className="h-px w-32 bg-amber-600 mx-auto mb-8"
+                        className="h-px w-32 bg-primary mx-auto mb-8"
                     />
                     <motion.span
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: 0.2 }}
-                        className="text-amber-600 tracking-[0.4em] uppercase text-xs font-bold"
+                        className="text-primary tracking-[0.4em] uppercase text-xs font-bold"
                     >
                         Signature Creations
                     </motion.span>
@@ -57,9 +57,9 @@ function FeaturedDishesContent({ dishes }: { dishes: Product[] }) {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: 0.3 }}
-                        className="font-serif text-5xl md:text-6xl lg:text-7xl text-gray-900 mt-6"
+                        className="font-serif text-5xl md:text-6xl lg:text-7xl text-foreground mt-6"
                     >
-                        Featured <span className="italic text-amber-600">Dishes</span>
+                        Finest <span className="italic text-primary">Devices</span>
                     </motion.h2>
                 </motion.div>
 
@@ -94,7 +94,7 @@ function FeaturedDishesContent({ dishes }: { dishes: Product[] }) {
                                             perspective: '1000px'
                                         }}
                                     >
-                                        <div className="relative h-full rounded-2xl overflow-hidden shadow-2xl bg-white border border-gray-100">
+                                        <div className="relative h-full rounded-2xl overflow-hidden shadow-2xl bg-card border border-border">
                                             <img
                                                 src={dish.image}
                                                 alt={dish.name}
@@ -114,7 +114,7 @@ function FeaturedDishesContent({ dishes }: { dishes: Product[] }) {
                                             <motion.div
                                                 initial={{ scale: 0 }}
                                                 animate={{ scale: isActive ? 1 : 0 }}
-                                                className="absolute top-6 right-6 bg-white/90 backdrop-blur-md text-amber-800 px-4 py-2 rounded-full font-serif text-lg font-bold shadow-lg border border-amber-100"
+                                                className="absolute top-6 right-6 bg-card/90 backdrop-blur-md text-foreground px-4 py-2 rounded-full font-serif text-lg font-bold shadow-lg border border-border"
                                             >
                                                 LKR {dish.price}
                                             </motion.div>
@@ -139,31 +139,31 @@ function FeaturedDishesContent({ dishes }: { dishes: Product[] }) {
                                 >
                                     {/* Dish Number */}
                                     <div className="flex items-center gap-4">
-                                        <span className="text-8xl font-serif text-amber-100 font-bold">
+                                        <span className="text-8xl font-serif text-muted-foreground font-bold">
                                             0{activeIndex + 1}
                                         </span>
-                                        <div className="h-px flex-1 bg-gradient-to-r from-amber-200 to-transparent" />
+                                        <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
                                     </div>
 
                                     {/* Dish Name */}
-                                    <h3 className="font-serif text-4xl md:text-5xl text-gray-900">
+                                    <h3 className="font-serif text-4xl md:text-5xl text-foreground">
                                         {dishes[activeIndex].name}
                                     </h3>
 
                                     {/* Description */}
-                                    <p className="text-gray-600 text-lg leading-relaxed">
+                                    <p className="text-muted-foreground text-lg leading-relaxed">
                                         {dishes[activeIndex].description}
                                     </p>
 
                                     {/* Meta Info */}
-                                    <div className="grid grid-cols-2 gap-6 pt-4 border-t border-gray-100">
+                                    <div className="grid grid-cols-2 gap-6 pt-4 border-t border-border">
                                         <div>
-                                            <span className="text-xs text-amber-600 tracking-widest uppercase font-semibold">Category</span>
-                                            <p className="text-gray-900 mt-1">{dishes[activeIndex].category}</p>
+                                            <span className="text-xs text-primary tracking-widest uppercase font-semibold">Category</span>
+                                            <p className="text-foreground mt-1">{dishes[activeIndex].category}</p>
                                         </div>
                                         <div>
-                                            <span className="text-xs text-amber-600 tracking-widest uppercase font-semibold">Status</span>
-                                            <p className="text-gray-900 mt-1">{dishes[activeIndex].status || 'Available'}</p>
+                                            <span className="text-xs text-primary tracking-widest uppercase font-semibold">Status</span>
+                                            <p className="text-foreground mt-1">{dishes[activeIndex].status || 'Available'}</p>
                                         </div>
                                     </div>
 
@@ -173,13 +173,13 @@ function FeaturedDishesContent({ dishes }: { dishes: Product[] }) {
                                             <button
                                                 key={index}
                                                 onClick={() => setActiveIndex(index)}
-                                                className={`relative h-1 transition-all duration-500 rounded-full overflow-hidden ${index === activeIndex ? 'w-12 bg-amber-600' : 'w-6 bg-gray-200 hover:bg-amber-300'
+                                                className={`relative h-1 transition-all duration-500 rounded-full overflow-hidden ${index === activeIndex ? 'w-12 bg-primary' : 'w-6 bg-muted hover:bg-primary/50'
                                                     }`}
                                             >
                                                 {index === activeIndex && (
                                                     <motion.div
                                                         layoutId="activeDot"
-                                                        className="absolute inset-0 bg-amber-600"
+                                                        className="absolute inset-0 bg-primary"
                                                         transition={{ type: "spring", stiffness: 500, damping: 30 }}
                                                     />
                                                 )}
@@ -218,7 +218,7 @@ export function FeaturedDishes() {
     }, []);
 
     if (loading) {
-        return <div className="py-32 bg-white text-center">Loading featured dishes...</div>;
+        return <div className="py-32 bg-background text-center text-muted-foreground">Loading finest devices...</div>;
     }
 
     if (featuredDishes.length === 0) {

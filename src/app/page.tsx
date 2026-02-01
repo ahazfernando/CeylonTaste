@@ -1,15 +1,17 @@
 import { Navigation } from "@/components/ui/navigation";
 import { HeroSection } from "@/components/sections/hero-section";
+import { HomeWidgetsSection } from "@/components/sections/home-widgets-section";
 // import { CategoriesSection } from "@/components/sections/categories-section";
 import { FeaturedDishes } from "@/components/sections/featured-dishes";
 import { CategorySection } from "@/components/sections/category-section";
 
 const Index = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <Navigation cartItemCount={3} />
       <main>
         <HeroSection />
+        <HomeWidgetsSection />
         <FeaturedDishes />
         {/* <CategoriesSection /> */}
 

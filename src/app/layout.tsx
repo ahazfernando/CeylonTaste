@@ -1,6 +1,6 @@
 import { Providers } from "./providers";
 import "./globals.css";
-import { Footer } from "@/components/layout/footer";
+import { ConditionalFooter } from "@/components/layout/conditional-footer";
 
 export const metadata = {
   title: "Ceylon Taste",
@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
@@ -25,7 +25,7 @@ export default function RootLayout({
       <body>
         <Providers>
           {children}
-          <Footer />
+          <ConditionalFooter />
         </Providers>
       </body>
     </html>

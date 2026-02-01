@@ -6,6 +6,7 @@ import {
   getProducts,
   getProductById as fetchProductById,
   createProduct,
+  deleteProduct as deleteProductApi,
   ApiError,
 } from './api';
 
@@ -36,7 +37,7 @@ export const productService = {
     const id = typeof crypto !== 'undefined' && crypto.randomUUID
       ? crypto.randomUUID()
       : `prod-${Date.now()}`;
-    const product: Product = { id, name: data.name, ...data };
+    const product: Product = { ...data, id, name: data.name };
     return createProduct(product);
   },
 
@@ -44,8 +45,14 @@ export const productService = {
     throw new Error('Update product is not supported by the current API. Use AWS API Gateway/Lambda to add PATCH/DELETE if needed.');
   },
 
-  async deleteProduct(_id: string): Promise<boolean> {
-    throw new Error('Delete product is not supported by the current API. Use AWS API Gateway/Lambda to add DELETE if needed.');
+  async deleteProduct(id: string): Promise<boolean> {
+    try {
+      await deleteProductApi(id);
+      return true;
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) return false;
+      throw err;
+    }
   },
 
   async getCategories(): Promise<string[]> {

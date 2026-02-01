@@ -22,6 +22,53 @@ export interface Product {
   updatedAt?: string;
 }
 
+/** Raw shape that backends might return (snake_case, different keys) */
+type RawProduct = Record<string, unknown>;
+
+function toNumber(value: unknown): number | undefined {
+  if (value == null) return undefined;
+  if (typeof value === 'number' && !Number.isNaN(value)) return value;
+  if (typeof value === 'string') {
+    const n = parseFloat(value);
+    return Number.isNaN(n) ? undefined : n;
+  }
+  return undefined;
+}
+
+function toString(value: unknown): string | undefined {
+  if (value == null) return undefined;
+  if (typeof value === 'string') return value;
+  return String(value);
+}
+
+/** Normalize API response to Product (handles alternate field names) */
+function normalizeProduct(raw: RawProduct): Product {
+  const id = toString(raw.id ?? raw._id) ?? '';
+  const name = toString(raw.name ?? raw.productName ?? raw.product_name) ?? '';
+  const description = toString(raw.description ?? raw.desc);
+  const price = toNumber(raw.price);
+  const category = toString(raw.category ?? raw.categoryName ?? raw.category_name);
+  const image = toString(raw.image ?? raw.imageUrl ?? raw.image_url);
+  const availability = toString(raw.availability ?? raw.status);
+  return {
+    id,
+    name,
+    description,
+    price,
+    originalPrice: toNumber(raw.originalPrice ?? raw.original_price),
+    rating: toNumber(raw.rating),
+    reviewCount: toNumber(raw.reviewCount ?? raw.review_count),
+    category,
+    isNewProduct: Boolean(raw.isNewProduct ?? raw.is_new_product),
+    isFeatured: Boolean(raw.isFeatured ?? raw.is_featured),
+    image,
+    availability,
+    status: toString(raw.status),
+    createdAt: toString(raw.createdAt ?? raw.created_at),
+    updatedAt: toString(raw.updatedAt ?? raw.updated_at),
+  };
+}
+
 /**
  * API base URL from environment (non-Vite).
  * - Create React App: REACT_APP_API_BASE_URL
@@ -47,6 +94,15 @@ export function getApiBaseUrl(): string {
 }
 
 export const API_BASE_URL = getApiBaseUrl();
+
+/** Returns Authorization: Bearer <token> for Cognito-protected routes; call before admin/write API requests. */
+export async function getAuthHeaders(): Promise<Record<string, string>> {
+  if (typeof window === 'undefined') return {};
+  const { getValidIdToken } = await import('@/lib/auth-cognito');
+  const token = await getValidIdToken();
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+}
 
 export class ApiError extends Error {
   status: number;
@@ -87,19 +143,72 @@ async function request<T>(
 }
 
 /** GET /products — fetch all products */
-export function getProducts(): Promise<Product[]> {
-  return request<Product[]>('/products');
+export async function getProducts(): Promise<Product[]> {
+  const raw = await request<RawProduct[]>('/products');
+  const list = Array.isArray(raw) ? raw : [];
+  return list.map(normalizeProduct);
 }
+
+/** Alias for test-api and other callers that expect apiService.getAllProducts() */
+export const apiService = {
+  getAllProducts: getProducts,
+  getProductById,
+  createProduct,
+  deleteProduct,
+};
 
 /** GET /products/{id} — fetch one product */
-export function getProductById(id: string): Promise<Product> {
-  return request<Product>(`/products/${encodeURIComponent(id)}`);
+export async function getProductById(id: string): Promise<Product> {
+  const raw = await request<RawProduct>(`/products/${encodeURIComponent(id)}`);
+  return normalizeProduct(raw ?? {});
 }
 
-/** POST /products — create product */
-export function createProduct(product: Product): Promise<Product> {
+/** Build payload for POST so backends that expect snake_case or alternate keys also receive values */
+function createProductPayload(product: Product): Record<string, unknown> {
+  return {
+    // camelCase (our type)
+    id: product.id,
+    name: product.name,
+    description: product.description,
+    price: product.price,
+    category: product.category,
+    image: product.image,
+    availability: product.availability,
+    isNewProduct: product.isNewProduct,
+    isFeatured: product.isFeatured,
+    status: product.status,
+    rating: product.rating,
+    reviewCount: product.reviewCount,
+    originalPrice: product.originalPrice,
+    createdAt: product.createdAt,
+    updatedAt: product.updatedAt,
+    // snake_case / alternate keys (so backends that only read these still persist category, price, etc.)
+    product_name: product.name,
+    category_name: product.category,
+    image_url: product.image,
+    product_description: product.description,
+  };
+}
+
+/** POST /products — create product (requires Cognito auth) */
+export async function createProduct(product: Product): Promise<Product> {
+  const body = createProductPayload(product);
+  const auth = await getAuthHeaders();
   return request<Product>('/products', {
     method: 'POST',
-    body: JSON.stringify(product),
+    headers: auth,
+    body: JSON.stringify(body),
   });
+}
+
+/** DELETE /products/{id} — delete product (requires Cognito auth) */
+export async function deleteProduct(id: string): Promise<void> {
+  const base = getApiBaseUrl();
+  const url = `${base}/products/${encodeURIComponent(id)}`;
+  const auth = await getAuthHeaders();
+  const res = await fetch(url, { method: 'DELETE', headers: auth });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new ApiError(text || res.statusText || `HTTP ${res.status}`, res.status);
+  }
 }

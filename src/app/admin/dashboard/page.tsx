@@ -5,26 +5,23 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  BarChart,
   Users,
   ShoppingCart,
   Package,
   TrendingUp,
-  DollarSign,
-  Crown,
-  Coffee,
   Plus,
   Eye,
-  Edit,
-  Trash2,
-  Loader2
+  Edit
 } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { RevenueChart } from "@/components/charts/revenue-chart";
 import { TopProductsChart } from "@/components/charts/top-products-chart";
 import { CustomerGrowthChart } from "@/components/charts/customer-growth-chart";
 import { DashboardSkeleton } from "@/components/skeletons/dashboard-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getOrders } from "@/lib/aws-orders-api";
+import { getProducts } from "@/lib/api";
 
 interface DashboardStats {
   totalRevenue: number;
@@ -60,40 +57,81 @@ interface DashboardData {
   lowStockProducts: LowStockProduct[];
 }
 
+const RECENT_ORDERS_LIMIT = 10;
+
 export default function AdminDashboard() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        // For now, use mock data since we don't have backend
-        // You can replace this with actual Firebase queries later
-        const mockData: DashboardData = {
-          stats: {
-            totalRevenue: 0,
-            totalOrders: 0,
-            totalProducts: 0,
-            totalCustomers: 0,
-            revenueGrowth: 0,
-            orderGrowth: 0
-          },
-          recentOrders: [],
-          lowStockProducts: []
-        };
-        
-        setDashboardData(mockData);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        setError('Failed to fetch dashboard data');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchDashboardData = useCallback(async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const [ordersRes, products] = await Promise.all([
+        getOrders().then((r) => r.orders).catch(() => []),
+        getProducts().catch(() => [])
+      ]);
 
-    fetchDashboardData();
+      const orders = Array.isArray(ordersRes) ? ordersRes : [];
+      const totalRevenue = orders
+        .filter((o) => ["delivered", "shipped"].includes((o.status || "").toLowerCase()))
+        .reduce((sum, o) => sum + (o.total ?? 0), 0);
+      const totalOrders = orders.length;
+      const uniqueCustomerIds = new Set(orders.map((o) => o.user?._id).filter(Boolean));
+      const totalCustomers = uniqueCustomerIds.size;
+      const totalProducts = products.length;
+
+      const recentOrders: RecentOrder[] = [...orders]
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, RECENT_ORDERS_LIMIT)
+        .map((o) => ({
+          _id: o._id,
+          orderNumber: o.orderNumber,
+          user: o.user ? { name: o.user.name ?? "Customer", email: o.user.email ?? "" } : null,
+          total: o.total ?? 0,
+          status: o.status ?? "pending",
+          createdAt: o.createdAt
+        }));
+
+      const lowStockProducts: LowStockProduct[] = [];
+      if (products.some((p) => "stock" in p && typeof (p as { stock?: number }).stock === "number")) {
+        (products as { id: string; name: string; price?: number; stock?: number }[])
+          .filter((p) => (p.stock ?? 0) <= 10)
+          .forEach((p) =>
+            lowStockProducts.push({
+              _id: p.id,
+              name: p.name,
+              stock: p.stock ?? 0,
+              price: p.price ?? 0
+            })
+          );
+      }
+
+      setDashboardData({
+        stats: {
+          totalRevenue,
+          totalOrders,
+          totalProducts,
+          totalCustomers,
+          revenueGrowth: 0,
+          orderGrowth: 0
+        },
+        recentOrders,
+        lowStockProducts
+      });
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+      setError(err instanceof Error ? err.message : "Failed to fetch dashboard data");
+      setDashboardData(null);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -131,12 +169,11 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <main className="container py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
-            <p className="text-muted-foreground">Loading dashboard...</p>
-          </div>
+        <div className="flex flex-col gap-2 mb-8">
+          <Skeleton className="h-9 w-64" />
+          <Skeleton className="h-5 w-80" />
         </div>
+        <DashboardSkeleton />
       </main>
     );
   }
@@ -146,8 +183,9 @@ export default function AdminDashboard() {
       <main className="container py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <p className="text-destructive mb-4">{error || 'Failed to load dashboard data'}</p>
-            <Button onClick={() => window.location.reload()}>Retry</Button>
+            <p className="text-destructive mb-4">{error || "Failed to load dashboard data"}</p>
+            <p className="text-sm text-muted-foreground mb-4">Check NEXT_PUBLIC_API_BASE_URL and RUN-BACKENDS.md.</p>
+            <Button onClick={() => fetchDashboardData()}>Retry</Button>
           </div>
         </div>
       </main>
@@ -160,7 +198,7 @@ export default function AdminDashboard() {
         {/* Admin Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold bg-black bg-clip-text text-transparent flex items-center gap-2">
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
               Admin Dashboard
             </h1>
             <p className="text-muted-foreground">Manage your CeylonTaste business</p>
@@ -248,16 +286,18 @@ export default function AdminDashboard() {
                   <CardTitle>Recent Orders</CardTitle>
                   <CardDescription>Latest customer orders and their status</CardDescription>
                 </div>
-                <Button variant="outline" size="sm">
-                  <Eye className="w-4 h-4 mr-2" />
-                  View All Orders
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/admin/orders">
+                    <Eye className="w-4 h-4 mr-2" />
+                    View All Orders
+                  </Link>
                 </Button>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {recentOrders.length > 0 ? (
                     recentOrders.map((order) => (
-                      <div key={order._id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div key={order._id} className="flex items-center justify-between p-4 border rounded-[24px]">
                         <div>
                           <div className="font-semibold">{order.orderNumber}</div>
                           <div className="text-sm text-muted-foreground">{order.user?.name || 'Unknown User'}</div>
@@ -307,7 +347,7 @@ export default function AdminDashboard() {
                     lowStockProducts.map((product) => {
                       const stockStatus = getStockStatus(product.stock);
                       return (
-                        <div key={product._id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div key={product._id} className="flex items-center justify-between p-4 border rounded-[24px]">
                           <div className="flex-1">
                             <div className="font-semibold">{product.name}</div>
                             <div className="text-sm text-muted-foreground">

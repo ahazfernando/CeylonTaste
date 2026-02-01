@@ -150,7 +150,7 @@ export function TopProductsChart() {
               const color = productConfig && 'color' in productConfig ? productConfig.color : `hsl(${index * 60} 45% 65%)`;
               
               return (
-                <div key={product.name} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                <div key={product.name} className="flex items-center justify-between p-2 rounded-[24px] bg-muted/50">
                   <div className="flex items-center gap-2">
                     <div 
                       className="w-3 h-3 rounded-full" 

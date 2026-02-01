@@ -1,55 +1,55 @@
 import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Crown, Coffee, Award, Heart, Users, Leaf } from "lucide-react";
+import { Cpu, Shield, Headphones } from "lucide-react";
+import Link from "next/link";
 import { AboutPreview } from "@/components/sections/about-preview";
 import { TeamSection } from "@/components/sections/team-section";
 import { TimelineSection } from "@/components/sections/timeline-section";
 
 export default function About() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <Navigation />
       <main>
         <AboutPreview />
 
         {/* Values Section */}
-        <section className="py-16">
+        <section id="why-choose-us" className="py-16">
           <div className="container">
-            <h2 className="text-3xl font-bold text-center mb-12 bg-gradient-coffee bg-clip-text text-transparent">
-              Our Values
+            <h2 className="text-3xl font-bold text-center mb-12 text-foreground">
+              Why Choose Us
             </h2>
             <div className="grid md:grid-cols-3 gap-8">
-              <Card className="text-center shadow-warm">
+              <Card className="text-center shadow-warm border-border bg-card">
                 <CardContent className="pt-6">
-                  <Coffee className="w-12 h-12 mx-auto mb-4 text-accent" />
-                  <h3 className="text-xl font-semibold mb-3">Premium Quality</h3>
+                  <Cpu className="w-12 h-12 mx-auto mb-4 text-primary" />
+                  <h3 className="text-xl font-semibold mb-3">Curated Tech</h3>
                   <p className="text-muted-foreground">
-                    We source only the finest Ceylon coffee beans and use premium ingredients
-                    for all our handcrafted cakes.
+                    We stock only trusted brands and rigorously tested devices—from
+                    smartphones and consoles to audio and accessories.
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="text-center shadow-warm">
+              <Card className="text-center shadow-warm border-border bg-card">
                 <CardContent className="pt-6">
-                  <Heart className="w-12 h-12 mx-auto mb-4 text-accent" />
-                  <h3 className="text-xl font-semibold mb-3">Made with Love</h3>
+                  <Shield className="w-12 h-12 mx-auto mb-4 text-primary" />
+                  <h3 className="text-xl font-semibold mb-3">Secure & Reliable</h3>
                   <p className="text-muted-foreground">
-                    Every product is crafted with passion and attention to detail,
-                    ensuring an exceptional experience with every bite and sip.
+                    Secure checkout, warranty support, and hassle-free returns so you
+                    can shop with confidence.
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="text-center shadow-warm">
+              <Card className="text-center shadow-warm border-border bg-card">
                 <CardContent className="pt-6">
-                  <Leaf className="w-12 h-12 mx-auto mb-4 text-accent" />
-                  <h3 className="text-xl font-semibold mb-3">Sustainable</h3>
+                  <Headphones className="w-12 h-12 mx-auto mb-4 text-primary" />
+                  <h3 className="text-xl font-semibold mb-3">Support When You Need It</h3>
                   <p className="text-muted-foreground">
-                    We're committed to sustainable practices and supporting local
-                    farmers while preserving Ceylon's natural heritage.
+                    Our team is here to help with product questions, orders, and
+                    after-sales support.
                   </p>
                 </CardContent>
               </Card>
@@ -63,21 +63,19 @@ export default function About() {
         {/* CTA Section */}
         <section className="py-16">
           <div className="container text-center">
-            <h2 className="text-3xl font-bold mb-6 bg-gradient-coffee bg-clip-text text-transparent">
-              Experience Royal Ceylon Today
+            <h2 className="text-3xl font-bold mb-6 text-foreground">
+              Get the Tech You Need
             </h2>
             <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Ready to taste the heritage? Explore our premium collection of coffees and cakes,
-              each crafted to deliver an unforgettable royal experience.
+              Explore devices, gaming gear, and accessories—all in one place. Fast
+              delivery and straightforward returns.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90" size="lg">
-                <Coffee className="w-5 h-5 mr-2" />
-                Shop Coffee
+              <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90" size="lg">
+                <Link href="/products">Shop Now</Link>
               </Button>
-              <Button className="bg-amber-100 text-amber-900 hover:bg-amber-200" size="lg">
-                <Crown className="w-5 h-5 mr-2" />
-                Browse Cakes
+              <Button asChild variant="outline" size="lg" className="border-primary text-foreground hover:bg-primary/10">
+                <Link href="/products">Explore Products</Link>
               </Button>
             </div>
           </div>

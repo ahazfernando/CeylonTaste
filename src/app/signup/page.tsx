@@ -13,7 +13,7 @@ import Image from "next/image";
 import primaryLogo from "@/assets/Home/CeylonTaste-Primary-2.png";
 import loginCouple from "@/assets/Login/login-couple.jpg";
 import loginFamily from "@/assets/Login/login-family.jpg";
-import { apiAuthService } from "@/lib/auth-firebase";
+import { apiAuthService } from "@/lib/auth";
 
 export default function SignUp() {
   const router = useRouter();
@@ -215,7 +215,7 @@ export default function SignUp() {
                       id="fullName"
                       type="text"
                       placeholder="Enter your full name"
-                      className="pl-10 px-4 py-3 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                      className="pl-10 px-4 py-3 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder:text-gray-500"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                     />
@@ -230,7 +230,7 @@ export default function SignUp() {
                       id="email"
                       type="email"
                       placeholder="Enter your email"
-                      className="pl-10 px-4 py-3 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                      className="pl-10 px-4 py-3 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder:text-gray-500"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                     />
@@ -245,7 +245,7 @@ export default function SignUp() {
                         id="password"
                         type={showPassword ? "text" : "password"}
                         placeholder="Create a password"
-                        className="px-4 py-3 pr-12 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                        className="px-4 py-3 pr-12 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder:text-gray-500"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                       />
@@ -272,7 +272,7 @@ export default function SignUp() {
                         id="confirmPassword"
                         type={showConfirmPassword ? "text" : "password"}
                         placeholder="Confirm Password"
-                        className="px-4 py-3 pr-12 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                        className="px-4 py-3 pr-12 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder:text-gray-500"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                       />

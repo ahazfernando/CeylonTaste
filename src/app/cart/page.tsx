@@ -52,7 +52,7 @@ export default function Cart() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background text-foreground">
       <Navigation />
       <main className="container py-8">
         {/* Header */}
@@ -62,10 +62,10 @@ export default function Cart() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold bg-black bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-foreground">
             Shopping Cart
           </h1>
-          <Badge className="bg-accent/20 text-accent-foreground">
+          <Badge className="bg-accent text-accent-foreground">
             {cartItems.length} items
           </Badge>
         </div>
@@ -168,7 +168,7 @@ export default function Cart() {
           <div>
             <Card className="shadow-coffee sticky top-8">
               <CardHeader>
-                <CardTitle className="bg-black bg-clip-text text-transparent">
+                <CardTitle className="text-foreground">
                   Order Summary
                 </CardTitle>
               </CardHeader>
@@ -199,7 +199,7 @@ export default function Cart() {
               
               <CardFooter className="flex flex-col gap-3">
                 <Button 
-                  className="w-full bg-amber-800 text-white hover:bg-amber-700 shadow-lg font-semibold"
+                  className="w-full bg-background border border-border text-foreground hover:bg-accent hover:text-accent-foreground shadow-lg font-semibold"
                   onClick={handleProceedToCheckout}
                   disabled={loading}
                 >

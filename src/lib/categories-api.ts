@@ -1,7 +1,8 @@
 /**
  * Categories API — AWS API Gateway + Lambda (same base URL as products).
+ * Write operations (POST, PUT, DELETE) require Cognito auth and send Bearer token.
  */
-import { getApiBaseUrl } from './api';
+import { getApiBaseUrl, getAuthHeaders } from './api';
 
 export interface Category {
   id: string;
@@ -27,6 +28,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return res.text() as Promise<T>;
 }
 
+async function requestWithAuth<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const auth = await getAuthHeaders();
+  return request<T>(path, { ...options, headers: { ...options.headers, ...auth } });
+}
+
 /** GET /categories — fetch all categories */
 export function getCategories(): Promise<Category[]> {
   return request<Category[]>('/categories');
@@ -37,23 +43,23 @@ export function getCategoryById(id: string): Promise<Category> {
   return request<Category>(`/categories/${encodeURIComponent(id)}`);
 }
 
-/** POST /categories — create category */
+/** POST /categories — create category (requires Cognito auth) */
 export function createCategory(category: Omit<Category, 'id'> & { id?: string }): Promise<Category> {
-  return request<Category>('/categories', {
+  return requestWithAuth<Category>('/categories', {
     method: 'POST',
     body: JSON.stringify(category),
   });
 }
 
-/** PUT /categories/{id} — update category */
+/** PUT /categories/{id} — update category (requires Cognito auth) */
 export function updateCategory(id: string, updates: Partial<Pick<Category, 'name' | 'description'>>): Promise<Category> {
-  return request<Category>(`/categories/${encodeURIComponent(id)}`, {
+  return requestWithAuth<Category>(`/categories/${encodeURIComponent(id)}`, {
     method: 'PUT',
     body: JSON.stringify(updates),
   });
 }
 
-/** DELETE /categories/{id} — delete category */
+/** DELETE /categories/{id} — delete category (requires Cognito auth) */
 export function deleteCategory(id: string): Promise<void> {
-  return request<void>(`/categories/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  return requestWithAuth<void>(`/categories/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }

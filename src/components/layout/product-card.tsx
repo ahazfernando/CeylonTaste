@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,13 +12,13 @@ import { toast } from "@/hooks/use-toast";
 interface ProductCardProps {
   id: string;
   name: string;
-  description: string;
-  price: number;
+  description?: string;
+  price?: number;
   originalPrice?: number;
-  image: string;
-  rating: number;
-  reviewCount: number;
-  category: string;
+  image?: string;
+  rating?: number;
+  reviewCount?: number;
+  category?: string;
   isNewProduct?: boolean;
   isFeatured?: boolean;
   className?: string;
@@ -26,13 +27,13 @@ interface ProductCardProps {
 export function ProductCard({
   id,
   name,
-  description,
-  price,
+  description = '',
+  price = 0,
   originalPrice,
-  image,
-  rating,
-  reviewCount,
-  category,
+  image = '',
+  rating = 0,
+  reviewCount = 0,
+  category = '',
   isNewProduct = false,
   isFeatured = false,
   className,
@@ -46,11 +47,11 @@ export function ProductCard({
     ? Math.round(((originalPrice - price) / originalPrice) * 100)
     : 0;
 
-  // Check authentication status using Firebase/localStorage
+  // Check authentication status using Cognito/localStorage
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Check if token exists in localStorage (set by Firebase auth)
+        // Check if token exists in localStorage (set by Cognito auth)
         const token = typeof window !== 'undefined' ? localStorage.getItem('tt_token') : null;
         const userStr = typeof window !== 'undefined' ? localStorage.getItem('tt_user') : null;
         
@@ -100,7 +101,7 @@ export function ProductCard({
       isFeatured && "ring-2 ring-accent/20",
       className
     )}>
-      <div className="relative overflow-hidden">
+      <Link href={`/products/${id}`} className="relative block overflow-hidden">
         <img 
           src={getImageUrl(image)} 
           alt={name}
@@ -110,7 +111,7 @@ export function ProductCard({
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-2">
           {isNewProduct && (
-            <Badge className="bg-white text-amber-800 shadow-lg">
+            <Badge className="bg-card border border-border text-foreground shadow-lg">
               New
             </Badge>
           )}
@@ -120,7 +121,7 @@ export function ProductCard({
             </Badge>
           )}
           {isFeatured && (
-            <Badge className="bg-amber-800 text-white">
+            <Badge className="bg-accent text-accent-foreground">
               Featured
             </Badge>
           )}
@@ -130,7 +131,7 @@ export function ProductCard({
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-3 right-3 bg-white/90 hover:bg-white text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute top-3 right-3 bg-card/90 hover:bg-card border border-border text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
         >
           <Heart className="h-4 w-4" />
         </Button>
@@ -138,14 +139,16 @@ export function ProductCard({
         {/* Category */}
         <Badge 
           variant="outline" 
-          className="absolute bottom-3 left-3 bg-white/90 text-foreground border-accent/20"
+          className="absolute bottom-3 left-3 bg-card/90 text-foreground border border-border"
         >
           {category}
         </Badge>
-      </div>
+      </Link>
 
       <CardContent className="p-4">
-        <h3 className="font-semibold text-lg mb-2 line-clamp-1">{name}</h3>
+        <Link href={`/products/${id}`}>
+          <h3 className="font-semibold text-lg mb-2 line-clamp-1 hover:text-primary hover:underline underline-offset-2">{name}</h3>
+        </Link>
         <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{description}</p>
 
         {/* Price */}

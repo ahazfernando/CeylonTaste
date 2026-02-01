@@ -70,7 +70,7 @@ export default function AdminCategoriesPage() {
     const category = categories.find(c => c.id === id);
     if (category) {
       setEditingCategory(category);
-      setEditFormData({ name: category.name, description: category.description });
+      setEditFormData({ name: category.name, description: category.description ?? '' });
       setIsEditDialogOpen(true);
     }
   }

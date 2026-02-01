@@ -93,7 +93,7 @@ export default function TestPage() {
                                         {product.category}
                                     </span>
                                     <span className="font-bold text-gray-900">
-                                        ${product.price.toFixed(2)}
+                                        ${(product.price ?? 0).toFixed(2)}
                                     </span>
                                 </div>
 

@@ -11,23 +11,23 @@ import sousChef from '@/assets/hero-coffee-shop.jpg';
 const team = [
     {
         name: 'Marcus Chen',
-        role: 'Executive Chef',
+        role: 'CEO & Co-founder',
         image: chef,
-        bio: 'With over 20 years of culinary experience, Marcus brings a unique fusion of Asian and European techniques to every dish.',
+        bio: 'With over 15 years in tech and retail, Marcus leads our mission to make great devices and gear accessible to everyone.',
         social: { instagram: '#', twitter: '#', linkedin: '#' }
     },
     {
         name: 'Elena Rodriguez',
-        role: 'Head Pastry Chef',
+        role: 'Head of Product',
         image: sousChef,
-        bio: 'Elena\'s artistic approach to pastry has revolutionized our dessert menu, creating edible masterpieces that delight the senses.',
+        bio: 'Elena curates our catalog of devices and accessories, ensuring quality, value, and the latest tech for our customers.',
         social: { instagram: '#', twitter: '#', linkedin: '#' }
     },
     {
         name: 'David Wright',
-        role: 'Sommelier',
-        image: chef, // Reusing placeholder
-        bio: 'Curating our award-winning wine list, David ensures the perfect pairing for every course.',
+        role: 'Head of Customer Experience',
+        image: chef,
+        bio: 'David leads support, returns, and warranties so every customer gets a smooth experience from order to delivery.',
         social: { instagram: '#', twitter: '#', linkedin: '#' }
     }
 ];
@@ -43,7 +43,7 @@ export const TeamSection = () => {
                         viewport={{ once: true }}
                         className="text-primary text-sm tracking-widest uppercase font-semibold"
                     >
-                        The Artisans
+                        The Team
                     </motion.span>
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}
@@ -52,7 +52,7 @@ export const TeamSection = () => {
                         transition={{ delay: 0.1 }}
                         className="text-4xl md:text-5xl font-serif font-bold text-foreground mt-4 mb-6"
                     >
-                        Meet the Masters
+                        Meet the People Behind the Tech
                     </motion.h2>
                     <motion.p
                         initial={{ opacity: 0, y: 20 }}
@@ -61,7 +61,7 @@ export const TeamSection = () => {
                         transition={{ delay: 0.2 }}
                         className="text-muted-foreground max-w-2xl mx-auto"
                     >
-                        Behind every exceptional dining experience is a team of passionate individuals dedicated to the art of hospitality.
+                        Our team is passionate about bringing you the best devices, gaming gear, and accessories—with support you can count on.
                     </motion.p>
                 </div>
 
@@ -107,7 +107,7 @@ export const TeamSection = () => {
 const SocialLink = ({ icon, href }: { icon: React.ReactNode, href: string }) => (
     <a
         href={href}
-        className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white hover:text-black transition-all"
+        className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-accent hover:text-accent-foreground transition-all"
     >
         {icon}
     </a>

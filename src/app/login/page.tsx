@@ -13,7 +13,7 @@ import Image from "next/image";
 import primaryLogo from "@/assets/Home/CeylonTaste-Primary-2.png";
 import loginCouple from "@/assets/Login/login-couple.jpg";
 import loginFamily from "@/assets/Login/login-family.jpg";
-import { apiAuthService } from "@/lib/auth-firebase";
+import { apiAuthService } from "@/lib/auth";
 
 const carouselImages = [
   {
@@ -195,7 +195,7 @@ export default function Login() {
                     id="email" 
                     type="email" 
                     placeholder="Enter your email"
-                    className="px-4 py-3 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                    className="px-4 py-3 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder:text-gray-500"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
@@ -208,7 +208,7 @@ export default function Login() {
                       id="password" 
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
-                      className="px-4 py-3 pr-12 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                      className="px-4 py-3 pr-12 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder:text-gray-500"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
@@ -246,7 +246,19 @@ export default function Login() {
               </CardContent>
 
               <CardFooter className="flex flex-col space-y-4">
-                {error ? (<p className="text-sm text-red-600">{error}</p>) : null}
+                {error ? (
+                  <div className="space-y-2">
+                    <p className="text-sm text-red-600">{error}</p>
+                    {/not confirmed|confirm your email/i.test(error) ? (
+                      <Link
+                        href={`/confirm${email ? `?email=${encodeURIComponent(email)}` : ""}`}
+                        className="text-sm text-[#B37142] hover:text-orange-700 font-medium underline"
+                      >
+                        Enter verification code
+                      </Link>
+                    ) : null}
+                  </div>
+                ) : null}
                 <Button onClick={handleLogin} disabled={loading} className="w-full py-3 bg-[#B37142] text-white font-medium rounded-xl hover:from-orange-600 hover:to-orange-700 focus:ring-1 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 shadow-lg">
                   {loading ? "Signing In..." : "Sign In"}
                 </Button>

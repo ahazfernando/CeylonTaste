@@ -19,8 +19,8 @@ export function CategorySection({
   categoryName, 
   title, 
   description, 
-  backgroundColor = "bg-white",
-  textColor = "text-gray-900"
+  backgroundColor = "bg-background",
+  textColor = "text-foreground"
 }: CategorySectionProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,14 +55,14 @@ export function CategorySection({
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className={`text-3xl font-bold ${textColor} mb-4`}>{title}</h2>
-            <p className="text-gray-600">{description}</p>
+            <p className="text-muted-foreground">{description}</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="animate-pulse">
-                <div className="bg-gray-200 h-48 rounded-lg mb-4"></div>
-                <div className="bg-gray-200 h-4 rounded mb-2"></div>
-                <div className="bg-gray-200 h-3 rounded w-2/3"></div>
+                <div className="bg-muted h-48 rounded-lg mb-4"></div>
+                <div className="bg-muted h-4 rounded mb-2"></div>
+                <div className="bg-muted h-3 rounded w-2/3"></div>
               </div>
             ))}
           </div>
@@ -80,7 +80,7 @@ export function CategorySection({
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className={`text-3xl font-bold ${textColor} mb-4`}>{title}</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">{description}</p>
+          <p className="text-muted-foreground max-w-2xl mx-auto">{description}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
@@ -108,7 +108,7 @@ export function CategorySection({
             <Button 
               size="lg" 
               variant="outline"
-              className="border-amber-800 text-amber-800 hover:bg-amber-800 hover:text-white transition-all duration-300"
+              className="border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300"
             >
               View All {categoryName}
               <ArrowRight className="ml-2 h-4 w-4" />

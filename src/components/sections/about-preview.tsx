@@ -3,10 +3,7 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import Link from 'next/link';
-
-// Replace with your own images
-import heroImage from '@/assets/hero-coffee-shop.jpg';
-import chefPortrait from '@/assets/couple-hero.jpg';
+import Image from 'next/image';
 
 export const AboutPreview = () => {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -34,7 +31,13 @@ export const AboutPreview = () => {
                                 transition={{ duration: 0.8 }}
                                 className="relative aspect-[3/4] rounded-2xl overflow-hidden"
                             >
-                                <img src={heroImage.src} alt="Restaurant interior" className="w-full h-full object-cover" />
+                                <Image
+                                    src="/about/e3f284e996eda3102fb7169f41fb9c52.jpg"
+                                    alt="Tech and innovation"
+                                    fill
+                                    className="object-cover"
+                                    sizes="(max-width: 1024px) 100vw, 50vw"
+                                />
                                 <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
                             </motion.div>
 
@@ -47,8 +50,8 @@ export const AboutPreview = () => {
                                 className="absolute -bottom-6 -right-6 lg:right-auto lg:-left-8 bg-primary p-6 rounded-xl shadow-lg transform"
                             >
                                 <div className="text-center">
-                                    <span className="font-serif text-5xl font-bold text-primary-foreground">25</span>
-                                    <p className="text-sm text-primary-foreground/80 mt-1">Years of<br />Excellence</p>
+                                    <span className="font-serif text-5xl font-bold text-primary-foreground">10+</span>
+                                    <p className="text-sm text-primary-foreground/80 mt-1">Years in<br />Tech</p>
                                 </div>
                             </motion.div>
                         </div>
@@ -65,21 +68,21 @@ export const AboutPreview = () => {
                             <span className="text-primary tracking-[0.4em] uppercase text-xs font-medium">Our Story</span>
 
                             <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl text-foreground mt-6 mb-8 leading-tight">
-                                A Legacy of
-                                <span className="block bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent italic">Culinary Art</span>
+                                Innovation That
+                                <span className="block bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent italic">Drives Tomorrow</span>
                             </h2>
 
                             <div className="space-y-6 text-muted-foreground leading-relaxed">
-                                <p>Founded in 1998, CeylonTaste has been the epitome of fine dining excellence in Manhattan. Our journey began with a simple vision: to create an unforgettable experience.</p>
-                                <p>Every dish is a masterpiece, crafted with passion, precision, and the finest ingredients from around the world.</p>
+                                <p>We started with a simple mission: make great tech accessible. From devices and gadgets to gaming and audio, we bring you the gear that fits your life.</p>
+                                <p>Every product is chosen for quality, performance, and value—so you can shop with confidence and get the tech you need.</p>
                             </div>
 
                             {/* Stats Row */}
                             <div className="grid grid-cols-3 gap-4 my-12">
                                 {[
-                                    { value: '3', label: 'Michelin Stars' },
-                                    { value: '50+', label: 'Awards' },
-                                    { value: '500K', label: 'Guests' },
+                                    { value: '10K+', label: 'Products' },
+                                    { value: '50+', label: 'Brands' },
+                                    { value: '100K+', label: 'Customers' },
                                 ].map((stat, i) => (
                                     <motion.div
                                         key={stat.label}
