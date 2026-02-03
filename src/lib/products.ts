@@ -41,8 +41,9 @@ export const productService = {
     return createProduct(product);
   },
 
-  async updateProduct(_id: string, _updates: Partial<Product>): Promise<Product | null> {
-    throw new Error('Update product is not supported by the current API. Use AWS API Gateway/Lambda to add PATCH/DELETE if needed.');
+  async updateProduct(id: string, updates: Partial<Product>): Promise<Product | null> {
+    const { updateProduct } = await import('./api');
+    return updateProduct(id, updates);
   },
 
   async deleteProduct(id: string): Promise<boolean> {
@@ -96,8 +97,8 @@ export const productService = {
 /** Image upload (Cloudinary) — unchanged */
 export const imageUploadService = {
   async uploadImage(file: File): Promise<string> {
-    const { uploadImageToCloudinary } = await import('./cloudinary-client');
-    return uploadImageToCloudinary(file);
+    const { uploadImageToS3 } = await import('./s3-upload-client');
+    return uploadImageToS3(file);
   },
 
   validateImage(file: File): { valid: boolean; error?: string } {

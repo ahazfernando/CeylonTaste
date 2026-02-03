@@ -23,21 +23,27 @@ import {
 interface OrderItem {
   product?: {
     _id: string;
-    name: string;
+    name?: string;
     image?: string;
   } | null;
+  // Fallbacks for flat structure
+  productId?: string;
+  productName?: string;
   quantity: number;
   price: number;
 }
 
 interface Order {
-  _id: string;
-  orderNumber: string;
-  user: {
-    _id: string;
-    name: string;
-    email: string;
+  _id?: string; // Made optional to handle different backend responses
+  orderId?: string; // Added to support DynamoDB style ID
+  id?: string; // Added to support another potential ID field
+  orderNumber?: string; // Made optional as some old orders might not have it
+  user?: {
+    _id: string; // or id
+    name?: string;
+    email?: string;
   };
+  userId?: string; // Added from backend
   items: OrderItem[];
   total: number;
   status: string;
@@ -54,6 +60,15 @@ interface Order {
     fullName?: string;
     email?: string;
   };
+}
+
+// Helper to safely get the order ID
+const getOrderId = (order: Order): string => {
+  return order._id || order.orderId || order.id || 'unknown-id';
+};
+
+function useOrdersFromAws(): boolean {
+  return !!process.env.NEXT_PUBLIC_API_BASE_URL;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -94,6 +109,7 @@ function getOrdersStatusUrl(orderId: string): string {
   return `${base}/api/orders/${orderId}/status`;
 }
 
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,9 +143,14 @@ export default function AdminOrdersPage() {
   }, [fetchOrders]);
 
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
-      order.user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    // Filter out completely invalid orders to prevent crashes
+    const orderId = getOrderId(order);
+    if (orderId === 'unknown-id' && !order.orderNumber) return false;
+
+    const userName = order.user?.name || 'Guest';
+    const matchesSearch =
+      userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (order.orderNumber || orderId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.items.some(item => item.product?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -147,7 +168,7 @@ export default function AdminOrdersPage() {
 
   const getItemsString = (items: OrderItem[]) => {
     return items.map(item => {
-      const productName = item.product?.name || 'Deleted Product';
+      const productName = item.product?.name || item.productName || 'Deleted Product';
       return `${productName} x${item.quantity}`;
     }).join(", ");
   };
@@ -170,9 +191,9 @@ export default function AdminOrdersPage() {
 
       if (response.ok) {
         // Update the order in the local state
-        setOrders(prevOrders => 
-          prevOrders.map(order => 
-            order._id === orderId 
+        setOrders(prevOrders =>
+          prevOrders.map(order =>
+            getOrderId(order) === orderId
               ? { ...order, status: newStatus }
               : order
           )
@@ -233,50 +254,52 @@ export default function AdminOrdersPage() {
 
   return (
     <>
-    <main className="container p-6 space-y-6">
-            <div className="flex flex-col gap-2"><h1 className="text-3xl font-bold text-foreground">Orders</h1><p className="text-muted-foreground">Manage and track customer orders</p></div>
+      <main className="container p-6 space-y-6">
+        <div className="flex flex-col gap-2"><h1 className="text-3xl font-bold text-foreground">Orders</h1><p className="text-muted-foreground">Manage and track customer orders</p></div>
 
-            {fetchError && (
-              <Card className="border-destructive/50 bg-destructive/10">
-                <CardContent className="pt-6">
-                  <p className="text-destructive font-medium mb-2">Could not load orders</p>
-                  <p className="text-sm text-muted-foreground mb-4">{fetchError}</p>
-                  <Button variant="outline" onClick={() => fetchOrders()}>
-                    Retry
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+        {fetchError && (
+          <Card className="border-destructive/50 bg-destructive/10">
+            <CardContent className="pt-6">
+              <p className="text-destructive font-medium mb-2">Could not load orders</p>
+              <p className="text-sm text-muted-foreground mb-4">{fetchError}</p>
+              <Button variant="outline" onClick={() => fetchOrders()}>
+                Retry
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-warning">{orders.filter(o => o.status === "pending").length}</div></CardContent></Card>
-              <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Processing</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-primary">{orders.filter(o => o.status === "processing").length}</div></CardContent></Card>
-              <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Delivered</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-success">{orders.filter(o => o.status === "delivered").length}</div></CardContent></Card>
-              <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-foreground">LKR {orders.filter(o => ["delivered", "shipped"].includes(o.status)).reduce((sum, o) => sum + o.total, 0).toFixed(2)}</div></CardContent></Card>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-warning">{orders.filter(o => o.status === "pending").length}</div></CardContent></Card>
+          <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Processing</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-primary">{orders.filter(o => o.status === "processing").length}</div></CardContent></Card>
+          <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Delivered</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-success">{orders.filter(o => o.status === "delivered").length}</div></CardContent></Card>
+          <Card className="border-border shadow-warm"><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-foreground">LKR {orders.filter(o => ["delivered", "shipped"].includes(o.status)).reduce((sum, o) => sum + o.total, 0).toFixed(2)}</div></CardContent></Card>
+        </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1 max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" /><Input placeholder="Search orders..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 border-border" /></div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-48 border-border"><SelectValue placeholder="Filter by status" /></SelectTrigger><SelectContent><SelectItem value="all">All Orders</SelectItem><SelectItem value="pending">Pending</SelectItem><SelectItem value="processing">Processing</SelectItem><SelectItem value="shipped">Shipped</SelectItem><SelectItem value="delivered">Delivered</SelectItem><SelectItem value="cancelled">Cancelled</SelectItem></SelectContent></Select>
-            </div>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1 max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" /><Input placeholder="Search orders..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 border-border" /></div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-48 border-border"><SelectValue placeholder="Filter by status" /></SelectTrigger><SelectContent><SelectItem value="all">All Orders</SelectItem><SelectItem value="pending">Pending</SelectItem><SelectItem value="processing">Processing</SelectItem><SelectItem value="shipped">Shipped</SelectItem><SelectItem value="delivered">Delivered</SelectItem><SelectItem value="cancelled">Cancelled</SelectItem></SelectContent></Select>
+        </div>
 
-            <Card className="border-border shadow-warm">
-              <CardHeader><CardTitle className="text-foreground">Order Management</CardTitle><CardDescription className="text-muted-foreground">View and manage all customer orders</CardDescription></CardHeader>
-              <CardContent>
-                {loading ? (
-                  <OrderListSkeleton count={6} />
-                ) : (
-                  <Table>
-                    <TableHeader><TableRow className="border-border"><TableHead className="text-foreground">Order ID</TableHead><TableHead className="text-foreground">Customer</TableHead><TableHead className="text-foreground">Items</TableHead><TableHead className="text-foreground">Total</TableHead><TableHead className="text-foreground">Status</TableHead><TableHead className="text-foreground">Date & Time</TableHead><TableHead className="text-foreground">Actions</TableHead></TableRow></TableHeader>
-                    <TableBody>
-                    {filteredOrders.map((order) => (
+        <Card className="border-border shadow-warm">
+          <CardHeader><CardTitle className="text-foreground">Order Management</CardTitle><CardDescription className="text-muted-foreground">View and manage all customer orders</CardDescription></CardHeader>
+          <CardContent>
+            {loading ? (
+              <OrderListSkeleton count={6} />
+            ) : (
+              <Table>
+                <TableHeader><TableRow className="border-border"><TableHead className="text-foreground">Order ID</TableHead><TableHead className="text-foreground">Customer</TableHead><TableHead className="text-foreground">Items</TableHead><TableHead className="text-foreground">Total</TableHead><TableHead className="text-foreground">Status</TableHead><TableHead className="text-foreground">Date & Time</TableHead><TableHead className="text-foreground">Actions</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {filteredOrders.map((order, idx) => {
+                    const orderId = getOrderId(order);
+                    return (
                       <TableRow
-                        key={order._id}
+                        key={orderId || idx}
                         className="border-border cursor-pointer hover:bg-muted/50"
                         onClick={() => setSelectedOrder(order)}
                       >
-                        <TableCell className="font-medium text-foreground">{order.orderNumber}</TableCell>
-                        <TableCell className="text-foreground">{order.user.name}</TableCell>
+                        <TableCell className="font-medium text-foreground">{order.orderNumber || orderId.slice(0, 8)}</TableCell>
+                        <TableCell className="text-foreground">{order.user?.name || order.shippingAddress?.fullName || order.userId || 'Guest'}</TableCell>
                         <TableCell className="text-muted-foreground max-w-xs truncate">{getItemsString(order.items)}</TableCell>
                         <TableCell className="font-medium text-foreground">LKR {order.total.toFixed(2)}</TableCell>
                         <TableCell><StatusBadge status={order.status} /></TableCell>
@@ -293,14 +316,14 @@ export default function AdminOrdersPage() {
                               <Eye className="h-4 w-4 text-muted-foreground" />
                             </Button>
                             {statusFlow[order.status]?.length > 0 && (
-                              <Select 
-                                value={order.status} 
-                                onValueChange={(newStatus) => handleStatusUpdate(order._id, newStatus)}
-                                disabled={updatingStatus === order._id}
+                              <Select
+                                value={order.status}
+                                onValueChange={(newStatus) => handleStatusUpdate(orderId, newStatus)}
+                                disabled={updatingStatus === orderId}
                               >
                                 <SelectTrigger className="w-24 h-8 border-border">
                                   <SelectValue />
-                                  {updatingStatus === order._id && (
+                                  {updatingStatus === orderId && (
                                     <Loader2 className="h-3 w-3 animate-spin ml-1" />
                                   )}
                                 </SelectTrigger>
@@ -315,105 +338,106 @@ export default function AdminOrdersPage() {
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))}
-                    </TableBody>
-                  </Table>
-                )}
-                {!loading && filteredOrders.length === 0 && !fetchError && (
-                  <div className="text-center py-12">
-                    <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-foreground mb-2">No orders found</h3>
-                    <p className="text-muted-foreground mb-2">Try adjusting your search or filter criteria.</p>
-                    <p className="text-sm text-muted-foreground">Orders placed at checkout appear here when the orders server is running (see RUN-BACKENDS.md).</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
+            {!loading && filteredOrders.length === 0 && !fetchError && (
+              <div className="text-center py-12">
+                <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">No orders found</h3>
+                <p className="text-muted-foreground mb-2">Try adjusting your search or filter criteria.</p>
+                <p className="text-sm text-muted-foreground">Orders placed at checkout appear here when the orders server is running (see RUN-BACKENDS.md).</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Order details modal */}
-      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto rounded-[24px]">
-          <DialogHeader>
-            <DialogTitle>Order {selectedOrder?.orderNumber}</DialogTitle>
-            <DialogDescription>
-              {selectedOrder && (
-                <>
-                  {formatDateForModal(selectedOrder.createdAt)} ·{" "}
-                  <StatusBadge status={selectedOrder.status} />
-                </>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          {selectedOrder && (
-            <div className="space-y-4">
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">Customer</h4>
-                <p className="font-medium text-foreground">{selectedOrder.user.name}</p>
-                <p className="text-sm text-muted-foreground">{selectedOrder.user.email}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">Items</h4>
-                <div className="border rounded-[24px] divide-y">
-                  {selectedOrder.items.map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-center py-2 px-3">
-                      <div className="text-sm">
-                        <span className="font-medium">{item.product?.name || "Unknown Product"}</span>
-                        <span className="text-muted-foreground ml-1">× {item.quantity}</span>
-                      </div>
-                      <div className="font-medium">
-                        LKR {(item.quantity * item.price).toFixed(2)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="flex justify-between text-lg font-semibold pt-2 border-t">
-                <span>Total</span>
-                <span>LKR {selectedOrder.total.toFixed(2)}</span>
-              </div>
-              {selectedOrder.shippingAddress && (
+        {/* Order details modal */}
+        <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto rounded-[24px]">
+            <DialogHeader>
+              <DialogTitle>Order {selectedOrder?.orderNumber}</DialogTitle>
+              <DialogDescription>
+                {selectedOrder && (
+                  <>
+                    {formatDateForModal(selectedOrder.createdAt)} ·{" "}
+                    <StatusBadge status={selectedOrder.status} />
+                  </>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            {selectedOrder && (
+              <div className="space-y-4">
                 <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Shipping address</h4>
-                  <div className="text-sm border rounded-[24px] p-3 space-y-1 text-foreground">
-                    {selectedOrder.shippingAddress.fullName && (
-                      <p className="font-medium">{selectedOrder.shippingAddress.fullName}</p>
-                    )}
-                    {(selectedOrder.shippingAddress.address ?? selectedOrder.shippingAddress.street) && (
-                      <p className="text-muted-foreground">
-                        {selectedOrder.shippingAddress.address ?? selectedOrder.shippingAddress.street}
-                      </p>
-                    )}
-                    {(selectedOrder.shippingAddress.city || selectedOrder.shippingAddress.province) && (
-                      <p className="text-muted-foreground">
-                        {[selectedOrder.shippingAddress.city, selectedOrder.shippingAddress.province]
-                          .filter(Boolean)
-                          .join(", ")}
-                        {(selectedOrder.shippingAddress.zipCode ?? selectedOrder.shippingAddress.postalCode) &&
-                          ` ${selectedOrder.shippingAddress.zipCode ?? selectedOrder.shippingAddress.postalCode}`}
-                      </p>
-                    )}
-                    {selectedOrder.shippingAddress.country && (
-                      <p className="text-muted-foreground">{selectedOrder.shippingAddress.country}</p>
-                    )}
-                    {selectedOrder.shippingAddress.phone && (
-                      <p className="text-muted-foreground">Phone: {selectedOrder.shippingAddress.phone}</p>
-                    )}
-                    {selectedOrder.shippingAddress.email && (
-                      <p className="text-muted-foreground">Email: {selectedOrder.shippingAddress.email}</p>
-                    )}
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Customer</h4>
+                  <p className="font-medium text-foreground">{selectedOrder.user?.name || selectedOrder.userId || 'Guest'}</p>
+                  <p className="text-sm text-muted-foreground">{selectedOrder.user?.email || 'No email provided'}</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Items</h4>
+                  <div className="border rounded-[24px] divide-y">
+                    {selectedOrder.items.map((item, idx) => (
+                      <div key={idx} className="flex justify-between items-center py-2 px-3">
+                        <div className="text-sm">
+                          <span className="font-medium">{item.product?.name || item.productName || "Unknown Product"}</span>
+                          <span className="text-muted-foreground ml-1">× {item.quantity}</span>
+                        </div>
+                        <div className="font-medium">
+                          LKR {(item.quantity * item.price).toFixed(2)}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              )}
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedOrder(null)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </main>
+                <div className="flex justify-between text-lg font-semibold pt-2 border-t">
+                  <span>Total</span>
+                  <span>LKR {selectedOrder.total.toFixed(2)}</span>
+                </div>
+                {selectedOrder.shippingAddress && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2">Shipping address</h4>
+                    <div className="text-sm border rounded-[24px] p-3 space-y-1 text-foreground">
+                      {selectedOrder.shippingAddress.fullName && (
+                        <p className="font-medium">{selectedOrder.shippingAddress.fullName}</p>
+                      )}
+                      {(selectedOrder.shippingAddress.address ?? selectedOrder.shippingAddress.street) && (
+                        <p className="text-muted-foreground">
+                          {selectedOrder.shippingAddress.address ?? selectedOrder.shippingAddress.street}
+                        </p>
+                      )}
+                      {(selectedOrder.shippingAddress.city || selectedOrder.shippingAddress.province) && (
+                        <p className="text-muted-foreground">
+                          {[selectedOrder.shippingAddress.city, selectedOrder.shippingAddress.province]
+                            .filter(Boolean)
+                            .join(", ")}
+                          {(selectedOrder.shippingAddress.zipCode ?? selectedOrder.shippingAddress.postalCode) &&
+                            ` ${selectedOrder.shippingAddress.zipCode ?? selectedOrder.shippingAddress.postalCode}`}
+                        </p>
+                      )}
+                      {selectedOrder.shippingAddress.country && (
+                        <p className="text-muted-foreground">{selectedOrder.shippingAddress.country}</p>
+                      )}
+                      {selectedOrder.shippingAddress.phone && (
+                        <p className="text-muted-foreground">Phone: {selectedOrder.shippingAddress.phone}</p>
+                      )}
+                      {selectedOrder.shippingAddress.email && (
+                        <p className="text-muted-foreground">Email: {selectedOrder.shippingAddress.email}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSelectedOrder(null)}>
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </main>
     </>
   );
 }

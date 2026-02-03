@@ -88,6 +88,9 @@ export async function getOrders(): Promise<{ orders: OrderListItem[] }> {
             throw new Error(`Orders request failed: ${response.status} ${String(msg).slice(0, 100)}`);
         }
         const data = await response.json();
+        if (Array.isArray(data)) {
+            return { orders: data };
+        }
         return { orders: data.orders ?? [] };
     } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);

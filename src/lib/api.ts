@@ -201,6 +201,24 @@ export async function createProduct(product: Product): Promise<Product> {
   });
 }
 
+/** PUT /products/{id} — update product (requires Cognito auth) */
+export async function updateProduct(id: string, updates: Partial<Product>): Promise<Product> {
+  // Merge valid updates into a payload similar to create
+  const body = { ...updates };
+  // If your backend needs snake_case for updates too, you might need a helper, 
+  // but product.mjs seems to spread body directly: ...body.
+
+  const base = getApiBaseUrl();
+  const url = `${base}/products/${encodeURIComponent(id)}`;
+  const auth = await getAuthHeaders();
+
+  return request<Product>(url, {
+    method: 'PUT',
+    headers: auth,
+    body: JSON.stringify(body),
+  });
+}
+
 /** DELETE /products/{id} — delete product (requires Cognito auth) */
 export async function deleteProduct(id: string): Promise<void> {
   const base = getApiBaseUrl();
