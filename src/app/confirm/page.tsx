@@ -11,7 +11,9 @@ import Image from "next/image";
 import primaryLogo from "@/assets/Home/CeylonTaste-Primary-2.png";
 import { apiAuthService } from "@/lib/auth";
 
-export default function ConfirmPage() {
+import { Suspense } from "react";
+
+function ConfirmPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
@@ -158,5 +160,13 @@ export default function ConfirmPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function ConfirmPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-orange-50 flex items-center justify-center">Loading...</div>}>
+      <ConfirmPageContent />
+    </Suspense>
   );
 }

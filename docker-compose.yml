@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  truetaste-frontend:
+    container_name: truetaste-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+      # - .env.local # Uncomment if you want to load local env overrides often used in dev
+    environment:
+      - NODE_ENV=production

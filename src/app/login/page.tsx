@@ -30,6 +30,21 @@ const carouselImages = [
   }
 ];
 
+const testimonials = [
+  {
+    quote: "The platform is incredibly smooth and responsive. Clean API design and the developer experience is top-notch. Deployments are a breeze.",
+    name: "Billy Grayson",
+    initials: "BG",
+    role: "Creative Director"
+  },
+  {
+    quote: "Best tooling we've used for our stack. Real-time collaboration and the TypeScript support is excellent. Our team shipped 40% faster.",
+    name: "Sarah Chen",
+    initials: "SC",
+    role: "Engineering Lead"
+  }
+];
+
 export default function Login() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
@@ -89,7 +104,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-orange-50">
+    <div className="min-h-screen bg-black">
       <main className="container flex items-center justify-center min-h-screen py-8 px-4">
         <div className="flex flex-col lg:flex-row w-full max-w-[980px] bg-white rounded-3xl shadow-2xl overflow-hidden">
           {/* Left Side - Image Carousel */}
@@ -116,15 +131,15 @@ export default function Login() {
                       <div className="space-y-6">
                         <div className="bg-black/15 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
                           <p className="text-lg leading-relaxed mb-4">
-                            "The espresso here is absolutely phenomenal! Rich, bold flavor with perfect crema. The baristas really know their craft - every cup is consistently excellent."
+                            "{testimonials[index % testimonials.length].quote}"
                           </p>
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                              <span className="text-sm font-medium">BG</span>
+                              <span className="text-sm font-medium">{testimonials[index % testimonials.length].initials}</span>
                             </div>
                             <div>
-                              <p className="font-medium">Billy Grayson</p>
-                              <p className="text-sm text-white/80">Creative Director</p>
+                              <p className="font-medium">{testimonials[index % testimonials.length].name}</p>
+                              <p className="text-sm text-white/80">{testimonials[index % testimonials.length].role}</p>
                             </div>
                           </div>
                         </div>
@@ -280,9 +295,9 @@ export default function Login() {
         </div>
 
         {/* Promotional Notice */}
-        <div className="fixed bottom-4 right-4 max-w-sm p-4 bg-white/20 backdrop-blur-lg border border-white/30 rounded-2xl shadow-xl">
-          <h4 className="font-semibold mb-1 text-sm text-gray-800">Get 10% Off</h4>
-          <p className="text-xs text-gray-600">
+        <div className="fixed bottom-4 right-4 max-w-sm p-4 bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl shadow-xl">
+          <h4 className="font-semibold mb-1 text-sm text-white">Get 10% Off</h4>
+          <p className="text-xs text-white/80">
             Get 5% Off purchase made over LKR 1000 and 10% off on purchases made over LKR 1500 with Ceylon Taste.
           </p>
         </div>

@@ -144,9 +144,9 @@ export default function ProductDetailPage() {
 
   const discountPercentage = product.originalPrice
     ? Math.round(
-        ((product.originalPrice - (product.price ?? 0)) / product.originalPrice) *
-          100
-      )
+      ((product.originalPrice - (product.price ?? 0)) / product.originalPrice) *
+      100
+    )
     : 0;
   const inStock =
     !product.availability ||
@@ -312,9 +312,9 @@ function ProductDetailAddToCart({
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.price,
-      category: product.category,
-      image: product.image,
+      price: product.price ?? 0,
+      category: product.category ?? "",
+      image: product.image ?? "",
     });
     toast({
       title: "Added to Cart",

@@ -5,7 +5,7 @@ Description: >
 
 Globals:
   Function:
-    Timeout: 3
+    Timeout: 20
     LoggingConfig:
       LogFormat: JSON
 
@@ -23,7 +23,8 @@ Resources:
             TableName: !Ref ProductsTable
       Environment:
         Variables:
-          PRODUCTS_TABLE: !Ref ProductsTable
+          PRODUCTS_TABLE: TrueTasteProducts
+          AWS_REGION: us-east-1
       Events:
         ProductApi:
           Type: Api
@@ -91,7 +92,8 @@ Resources:
             TableName: !Ref CategoriesTable
       Environment:
         Variables:
-          CATEGORIES_TABLE: !Ref CategoriesTable
+          CATEGORIES_TABLE: TrueTasteCategories
+          AWS_REGION: us-east-1
       Events:
         ListCategories:
           Type: Api
@@ -117,7 +119,8 @@ Resources:
             TableName: !Ref UsersTable
       Environment:
         Variables:
-          USERS_TABLE: !Ref UsersTable
+          USERS_TABLE: TrueTasteUsers
+          AWS_REGION: us-east-1
       Events:
         UsersMe:
           Type: Api
@@ -162,7 +165,8 @@ Resources:
             TableName: !Ref OrdersTable
       Environment:
         Variables:
-          ORDERS_TABLE: !Ref OrdersTable
+          ORDERS_TABLE: TrueTasteOrders
+          AWS_REGION: us-east-1
       Events:
         ListOrders:
           Type: Api
