@@ -39,6 +39,8 @@ interface OrderItem {
 interface Order {
   _id: string;
   orderNumber: string;
+  userId?: string;
+  user?: { _id: string; name?: string; email?: string };
   items: OrderItem[];
   total: number;
   status: string;
@@ -129,10 +131,19 @@ export default function Profile() {
     setOrdersError(null);
     setOrdersLoading(true);
     try {
+      console.log('Profile orders check - Current User ID:', userId);
       const { orders: allOrders } = await getOrders();
-      const myOrders = allOrders.filter((o) => o.user?._id === userId) as Order[];
+      console.log('Profile orders check - All Orders received:', allOrders);
+
+      const myOrders = allOrders.filter((o) => {
+        const orderUserId = o.userId || o.user?._id;
+        return orderUserId === userId;
+      }) as Order[];
+
+      console.log('Profile orders check - Filtered User Orders:', myOrders);
       setOrders(myOrders);
     } catch (err) {
+      console.error('Profile orders check - Error:', err);
       setOrdersError(err instanceof Error ? err.message : "Could not load your orders.");
       setOrders([]);
     } finally {

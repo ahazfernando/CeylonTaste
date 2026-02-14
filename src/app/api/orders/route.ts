@@ -35,11 +35,13 @@ export async function GET(request: NextRequest) {
 
     const data = await res.json().catch(() => ({ orders: [] }));
     if (!res.ok) {
+      console.error("[api/orders] Backend returned error:", data.error || res.statusText);
       return NextResponse.json(
         { error: data.error || res.statusText, orders: [] },
         { status: res.status }
       );
     }
+    console.log("[api/orders] fetched data:", JSON.stringify(data).slice(0, 200) + "...");
     return NextResponse.json(data);
   } catch (err) {
     console.error("[api/orders] proxy error:", err);

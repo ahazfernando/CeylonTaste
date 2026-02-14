@@ -3,7 +3,9 @@
  * Calls the truetaste-getUploadUrl Lambda to get a pre-signed URL, then PUTs the file.
  */
 
-const GET_UPLOAD_URL = process.env.NEXT_PUBLIC_GET_UPLOAD_URL?.trim() || '';
+import { getApiBaseUrl } from './api';
+
+const GET_UPLOAD_URL = `${getApiBaseUrl()}/upload-url`;
 
 export interface GetUploadUrlResponse {
   uploadUrl: string;
@@ -51,18 +53,26 @@ export async function uploadImageToS3(file: File): Promise<string> {
     throw new Error('Invalid response: missing uploadUrl');
   }
 
-  const putRes = await fetch(uploadUrl, {
-    method: 'PUT',
-    body: file,
-    headers: {
-      'Content-Type': file.type,
-    },
-  });
+  let putRes;
+  try {
+    putRes = await fetch(uploadUrl, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type,
+      },
+    });
+  } catch (err) {
+    throw new Error(`Network error uploading to S3: ${err instanceof Error ? err.message : 'Unknown Error'}. This is likely a CORS issue on the S3 bucket.`);
+  }
 
   if (!putRes.ok) {
     throw new Error(`Upload to S3 failed (${putRes.status}). Check bucket CORS and permissions.`);
   }
 
-  // Lambda may return imageUrl; if not, the upload URL without query params is often the object URL
-  return imageUrl || uploadUrl.split('?')[0];
+  // Lambda may return imageUrl; if not, the upload URL without query params is often the object URL.
+  // Ensure the URL is clean and uses the correct bucket domain if provided in response, 
+  // otherwise fallback to split.
+  const cleanUrl = imageUrl || uploadUrl.split('?')[0];
+  return cleanUrl;
 }

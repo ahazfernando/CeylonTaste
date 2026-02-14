@@ -3,11 +3,26 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   Serverless Product API - V2
 
+Parameters:
+  CognitoUserPoolId:
+    Type: String
+    Description: Cognito User Pool ID for authentication
+    Default: us-east-1_E4wY07xrz
+
 Globals:
   Function:
     Timeout: 20
     LoggingConfig:
       LogFormat: JSON
+  Api:
+    Cors:
+      AllowMethods: "'*'"
+      AllowHeaders: "'*'"
+      AllowOrigin: "'*'"
+    Auth:
+      Authorizers:
+        CognitoAuthorizer:
+          UserPoolArn: !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${CognitoUserPoolId}"
 
 Resources:
   ProductFunction:
@@ -26,16 +41,55 @@ Resources:
           PRODUCTS_TABLE: TrueTasteProducts
           AWS_REGION: us-east-1
       Events:
-        ProductApi:
+        ProductList:
           Type: Api
           Properties:
             Path: /products
-            Method: any
-        ProductDetail:
+            Method: get
+            Auth:
+              Authorizer: NONE
+        ProductCreate:
+          Type: Api
+          Properties:
+            Path: /products
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+        ProductOptions:
+          Type: Api
+          Properties:
+            Path: /products
+            Method: options
+            Auth:
+              Authorizer: NONE
+        ProductDetailGet:
           Type: Api
           Properties:
             Path: /products/{id}
-            Method: any
+            Method: get
+            Auth:
+              Authorizer: NONE
+        ProductDetailPut:
+          Type: Api
+          Properties:
+            Path: /products/{id}
+            Method: put
+            Auth:
+              Authorizer: CognitoAuthorizer
+        ProductDetailDelete:
+          Type: Api
+          Properties:
+            Path: /products/{id}
+            Method: delete
+            Auth:
+              Authorizer: CognitoAuthorizer
+        ProductDetailOptions:
+          Type: Api
+          Properties:
+            Path: /products/{id}
+            Method: options
+            Auth:
+              Authorizer: NONE
   
   ProductsTable:
     Type: AWS::DynamoDB::Table

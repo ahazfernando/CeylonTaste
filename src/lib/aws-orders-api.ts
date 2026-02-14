@@ -51,6 +51,7 @@ export function getOrdersListUrl(): string {
 export interface OrderListItem {
     _id: string;
     orderNumber: string;
+    userId?: string;
     user?: { _id: string; name?: string; email?: string };
     items: Array<{
         product?: { _id: string; name?: string; image?: string };

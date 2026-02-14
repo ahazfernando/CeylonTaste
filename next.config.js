@@ -31,6 +31,14 @@ const nextConfig = {
     }
     return config;
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/proxy/:path*',
+        destination: 'https://9gf4gh296l.execute-api.us-east-1.amazonaws.com/Prod/:path*',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
